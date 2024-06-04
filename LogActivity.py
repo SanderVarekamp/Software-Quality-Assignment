@@ -1,7 +1,8 @@
 import sqlite3
 from datetime import datetime
+import pandas as pd
 
-class LogActivity:
+class Logs:
     def LogAction(user, activity, info, sus):
         now = datetime.now()
         time = now.strftime("%H:%M:%S")
@@ -20,3 +21,10 @@ class LogActivity:
                        (str(date), str(time), user, activity, info, sus))
         connection.commit()
         connection.close()
+
+    def PrintLogs():
+      conn = sqlite3.connect('DataBase.db')
+      cur = conn.cursor()
+      cur.execute("SELECT * FROM Logs")
+      print (pd.read_sql_query("SELECT * FROM Logs", conn))
+      conn.close()

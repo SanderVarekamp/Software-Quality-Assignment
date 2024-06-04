@@ -2,7 +2,7 @@ import sqlite3
 import re
 from datetime import datetime
 
-from LogActivity import LogActivity
+from LogActivity import Logs
 from Employee import Employee
 
 class main:
@@ -63,7 +63,7 @@ class main:
         NewPhoneNumb = f"31-{PhoneNumb}"
         NewEmployee = Employee(FirstName, LastName, Age, Gender, Weight, Address, City, Email, NewPhoneNumb, True, False, False)
         NewEmployee.InsertData()
-        LogActivity.LogAction("Testing", "Created new user", f"Created new user named {FirstName} {LastName}", "No")
+        Logs.LogAction("Testing", "Created new user", f"Created new user named {FirstName} {LastName}", "No")
         print("User succesfully created.")
         main.start()
 
@@ -76,4 +76,5 @@ class main:
         E1.InsertData()
 
 if __name__ == '__main__':
-    main.start()
+    Logs.PrintLogs()
+    #main.start()
