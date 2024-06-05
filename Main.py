@@ -1,7 +1,7 @@
 import sqlite3
 import re
 from datetime import datetime
-
+from Consultant import Consultant
 from LogActivity import Logs
 from Employee import Employee
 
@@ -10,13 +10,15 @@ class main:
         print("Welcome!")
         print("What would you like to do?")
         print("1.Register new user")
-        print("2.Log in")
+        print("2.Get_Member_Data")
         print("3.Log out")
-        choice = input("Enter your choice")
+        choice = input("Enter your choice ")
         if choice == "1":
             main.RegisterNewMember()
         if choice == "2":
-            print("WIP")
+            MemberID = int(input("Enter your MemberID: "))
+            print(Consultant.GetMemberData(MemberID))
+            # print("WIP") 2440228125
         if choice == "3":
             print("WIP")
 
@@ -76,5 +78,5 @@ class main:
         E1.InsertData()
 
 if __name__ == '__main__':
-    Logs.PrintLogs()
-    #main.start()
+    # Logs.PrintLogs()
+    main.start()
