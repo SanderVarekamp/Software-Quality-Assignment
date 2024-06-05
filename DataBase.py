@@ -1,7 +1,6 @@
 import sqlite3
 from datetime import datetime
 import pandas as pd
-import shutil
 
 class Logs:
     def LogAction(user, activity, info, sus):
@@ -35,10 +34,16 @@ class Members:
         self.SourceDB = "DataBase.db"
         self.BackupDB = "DataBase_Backup.db"
 
-    def backup_sqlite_db(self):
+    def UpdateBackUp(self):
         try:
-            shutil.copy2(self.SourceDB, self.BackupDB)
+            source_conn = sqlite3.connect(self.SourceDB)
+            backup_conn = sqlite3.connect(self.BackupDB)
+            with backup_conn:
+                source_conn.backup(backup_conn, pages=1, progress=None)
+            
             print(f"Backup successful! Database backed up to {self.BackupDB}")
+            source_conn.close()
+            backup_conn.close()
         except Exception as e:
             print(f"An error occurred while backing up the database: {e}")
     
