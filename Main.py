@@ -2,8 +2,9 @@ import sqlite3
 import re
 from datetime import datetime
 
-from LogActivity import Logs
+from DataBase import *
 from Employee import Employee
+from Encrypt import *
 
 class main:
     def start():
@@ -70,11 +71,14 @@ class main:
     def insertTest():
         E1 = Employee("Emma", "Doe", 36, "Female", 70, 
                       "Wijnhaven 107 3232KL", "Rotterdam", "Emma.Doe@Test.com", "31-6-53458917", True, False, False)
-        E1.Print()
-        print(E1.RegistrationDate)
-        print(E1.MemberID)
         E1.InsertData()
 
 if __name__ == '__main__':
-    Logs.PrintLogs()
-    #main.start()
+    main.start()
+
+    #example incrypting database and making a backup of database
+    # Encrypted = Encrypt("DataBase.db", "VeryGoodPassWord")
+    # Decrypt(Encrypted, "VeryGoodPassWord", "DataBase.db")
+    # member = Members()
+    # member.UpdateBackUp()
+    # Decrypt("DataBase_Backup.db.enc", "VeryGoodPassWord", member.BackupDB)

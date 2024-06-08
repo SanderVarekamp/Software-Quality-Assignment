@@ -23,24 +23,21 @@ class Employee:
     def GenerateMemberID(self):
         Numb0 = int(str(self.RegistrationDate)[8])
         Numb1 = int(str(self.RegistrationDate)[9])
-        Numb2 = random.randint(0, 9)
-        Numb3 = random.randint(0, 9)
-        Numb4 = random.randint(0, 9)
-        Numb5 = random.randint(0, 9)
-        Numb6 = random.randint(0, 9)
-        Numb7 = random.randint(0, 9)
-        Numb8 = random.randint(0, 9)
-        Numb9 = (Numb0 + Numb1 + Numb2 + Numb3 + Numb4 + Numb5 + Numb6 + Numb7 + Numb8) % 10
-        randomNumb = int(str(Numb0) + str(Numb1) + str(Numb2) + str(Numb3) +
-                   str(Numb4) + str(Numb5) + str(Numb6) + str(Numb7) + str(Numb8) + str(Numb9))
+        random_digits = [random.randint(0, 9) for _ in range(7)]
+        Numb9 = (Numb0 + Numb1 + sum(random_digits)) % 10
+        randomNumb = int(f"{Numb0}{Numb1}{''.join(map(str, random_digits))}{Numb9}")
         with sqlite3.connect('DataBase.db') as conn:
             cur = conn.cursor()
-            cur.execute('select MemberID from Members')
-            rows = cur.fetchall()
-        for row in rows:
-            if row == randomNumb:
-                return Employee.GenerateMemberID()
-        conn.close()
+            try:
+                cur.execute('SELECT MemberID FROM Members')
+                rows = cur.fetchall()
+                existing_ids = [row[0] for row in rows]
+                while randomNumb in existing_ids:
+                    random_digits = [random.randint(0, 9) for _ in range(7)]
+                    Numb9 = (Numb0 + Numb1 + sum(random_digits)) % 10
+                    randomNumb = int(f"{Numb0}{Numb1}{''.join(map(str, random_digits))}{Numb9}")
+            except:
+                pass
         return randomNumb
 
     def InsertData(self):

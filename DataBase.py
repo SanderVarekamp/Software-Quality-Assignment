@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime
 import pandas as pd
+from Encrypt import *
 
 class Logs:
     def LogAction(user, activity, info, sus):
@@ -44,23 +45,30 @@ class Members:
             print(f"Backup successful! Database backed up to {self.BackupDB}")
             source_conn.close()
             backup_conn.close()
+            Encrypt(self.BackupDB, "VeryGoodPassWord")
         except Exception as e:
             print(f"An error occurred while backing up the database: {e}")
     
     def PrintMembers():
         conn = sqlite3.connect('DataBase.db')
         cur = conn.cursor()
-        cur.execute("SELECT * FROM Logs")
-        print (pd.read_sql_query("SELECT * FROM Members", conn))
+        try:
+            cur.execute("SELECT * FROM Logs")
+            print (pd.read_sql_query("SELECT * FROM Members", conn))
+        except:
+            print("No Data found")
         conn.close()
 
     def FindMember(Firstname, Lastname):
         conn = sqlite3.connect('DataBase.db')
         cur = conn.cursor()
-        query = "SELECT * FROM Members WHERE Firstname=? AND Lastname=?"
-        params = (Firstname, Lastname)
-        cur.execute(query, params)
-        rows = cur.fetchall()
-        df = pd.read_sql_query(query, conn, params=params)
-        print(df)
+        try:
+            query = "SELECT * FROM Members WHERE Firstname=? AND Lastname=?"
+            params = (Firstname, Lastname)
+            cur.execute(query, params)
+            rows = cur.fetchall()
+            df = pd.read_sql_query(query, conn, params=params)
+            print(df)
+        except:
+            print("No member by that name found")
         conn.close()
