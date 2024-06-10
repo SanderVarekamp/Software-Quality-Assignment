@@ -1,80 +1,100 @@
-import sqlite3
-import re
-from datetime import datetime
-
-from LogActivity import Logs
-from Employee import Employee
+import os 
+from AccountManager import AccountManager
+from Database import *
+import bcrypt
+from LoggedInAccount import *
+from datetime import date
+# from LogActivity import Logs
 
 class main:
+
     def start():
-        print("Welcome!")
-        print("What would you like to do?")
-        print("1.Register new user")
-        print("2.Log in")
-        print("3.Log out")
-        choice = input("Enter your choice")
-        if choice == "1":
-            main.RegisterNewMember()
-        if choice == "2":
-            print("WIP")
-        if choice == "3":
-            print("WIP")
+        Database.MakeDB()
+        # AccountManager.CreateAccount("Testworlds","TestingPassword1!", "Daan", "Polet", "20", "other", "20", "somewhere", "somecity", "Email@Email.Email", "06-24995072")
+        main.menu()
 
-    def Login():
-        print
+    # def testHash():
+    #     password = "Hello"
+    #     byte = bytes(password, 'utf-8')
+    #     tohash = b""+ byte
+    #     salt = bcrypt.gensalt()
+    #     hashed = bcrypt.hashpw(tohash, salt)
+    #     print(password)
+    #     print(byte)
+    #     print(tohash)
+    #     print(salt)
+    #     print(hashed)
+    
+        # Database.InsertAccount(Account("Username","unhashedpassword", "testing", "ing", 20, "other", 20, "somewhere", "somecity", "Email@Email.Email", "06-24995072"))
+        # Account.InsertIntoDatabase(Account.Create())
+        # main.menu()
+    
+    def menu():   
+        while True:     
+            os.system('cls')
+            if not isinstance(LoggedInAccount.CurrentLoggedInAccount, Account):
+                print("Welcome!")
+                print("Where would you like to go?")
+                print("1. Log in")
+                print()
+                choice = input("Enter your choice: ")
+                os.system('cls')
+                if choice == "1":
+                    # print("WIP")
+                    LoggedInAccount.LogInInput()
+                    # account1 = Account("testing", "ing","unhashedpassword", 20, "other", 20, "somewhere", "somecity", "Email@Email.Email", "06-24995072")
 
-    def RegisterNewMember():
-        def input_with_validation(prompt, validation_func, error_message):
-            while True:
-                value = input(prompt)
-                if validation_func(value):
-                    return value
-                else:
-                    print(error_message)
-        
-        def validate_name(name):
-            return name.isalpha()
-        
-        def validate_age(age):
-            return age.isdigit() and 0 < int(age) < 150
-        
-        def validate_gender(gender):
-            return gender.lower() in ['male', 'female', 'other']
-        
-        def validate_weight(weight):
-            return weight.replace('.', '', 1).isdigit() and 0 < float(weight) < 1000
-        
-        def validate_email(email):
-            return re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
-        
-        def validate_phone(phone):
-            return re.match(r"6-\d{8}$", phone) is not None
-        
-        FirstName = input_with_validation("What is your first name?", validate_name, "Invalid name. Please enter alphabetic characters only.")
-        LastName = input_with_validation("What is your last name?", validate_name, "Invalid name. Please enter alphabetic characters only.")
-        Age = input_with_validation("What is your age?", validate_age, "Invalid age. Please enter a valid number between 1 and 150.")
-        Gender = input_with_validation("What is your gender?", validate_gender, "Invalid gender. Please enter 'male', 'female', or 'other'.")
-        Weight = input_with_validation("What is your weight?", validate_weight, "Invalid weight. Please enter a valid number.")
-        Address = input("What is your address?")  # Assuming no validation needed
-        City = input("What is your city?")  # Assuming no validation needed
-        Email = input_with_validation("What is your email?", validate_email, "Invalid email address. Please include '@'.")
-        PhoneNumb = input_with_validation("What is your phone number? (6-XXXXXXXX)", validate_phone, "Invalid phone number. Format should be 6-XXXXXXXX.")
-        
-        NewPhoneNumb = f"31-{PhoneNumb}"
-        NewEmployee = Employee(FirstName, LastName, Age, Gender, Weight, Address, City, Email, NewPhoneNumb, True, False, False)
-        NewEmployee.InsertData()
-        Logs.LogAction("Testing", "Created new user", f"Created new user named {FirstName} {LastName}", "No")
-        print("User succesfully created.")
-        main.start()
+                    # Database.InsertAccount(account1)
+                    # account1.Print()
 
-    def insertTest():
-        E1 = Employee("Emma", "Doe", 36, "Female", 70, 
-                      "Wijnhaven 107 3232KL", "Rotterdam", "Emma.Doe@Test.com", "31-6-53458917", True, False, False)
-        E1.Print()
-        print(E1.RegistrationDate)
-        print(E1.MemberID)
-        E1.InsertData()
+            # elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "consultant":
+            #     print("Logged in!")
+            #     LoggedInAccount.CurrentLoggedInAccount.Print()
+            #     input("> ")
+            # elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "member":
+            #     print("good i think")
+            #     input("> ")
+            else:
+                # print("oh oh")
+                print("1. Create new account")
+                print("2. Account information")
+                print("3. Log out")
+                print()
+                choice = input("Enter your choice: ")
+                os.system('cls')
+                if choice == "1":
+                    AccountManager.CreateAccountInput()
+                elif choice == "2":
+                    LoggedInAccount.CurrentLoggedInAccount.Print()
+                elif choice == "3":
+                    LoggedInAccount.LogOut()
+                input("> ")
+
+        
+    def hardcodeAdminAcc():
+        connection = sqlite3.connect("DataBase.db")
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                       ("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
+                        "admin", "admin", "admin@admkin.admin", "612121212", "SuperAdmin", str(date.today().strftime("%d/%m/%Y")), Account.GenerateId())) # from datetime import date
+        connection.commit()
+        connection.close()
+
+                
+
+# test insert
+# Database.InsertAccount(Account("testing", "ing", 20, "other", 20, "somewhere", "somecity", "Email@Email.Email", 06-24995072))
+            
+# if not arr[0].isalpha(): print(2);return False
+# if not any(char.isdigit() for char in arr[1]): print(3);return False
+# if len(arr) == 3:
+#     if not (arr[2][:-2].isalpa() & arr[2][-2:].isdigit()): print(4);return False
+# elif len(arr) == 3:
+#     if not arr[2].isalpha(): return print(5);False
+# if len(arr) == 4:
+#     if not arr[3].isdigit(): return print(6);False
+# return True
 
 if __name__ == '__main__':
-    Logs.PrintLogs()
-    #main.start()
+    # Logs.PrintLogs()
+    main.start()
