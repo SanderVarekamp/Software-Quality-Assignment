@@ -1,7 +1,11 @@
 import sqlite3
 class Database:
+    
+    def AddAllTables():
+       Database.AddTableMembers()
+       Database.AddTableLog()
 
-    def MakeDB():
+    def AddTableMembers():
         connection = sqlite3.connect("DataBase.db")
         cursor = connection.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS Members (
@@ -22,4 +26,18 @@ class Database:
                           )""")
         connection.commit()
         connection.close()
-    
+
+    def AddTableLog():
+      connection = sqlite3.connect("DataBase.db")
+      cursor = connection.cursor()
+      cursor.execute("""CREATE TABLE IF NOT EXISTS ActivityLog (
+                            Date TEXT, 
+                            Time TEXT, 
+                            Username TEXT, 
+                            Activity TEXT, 
+                            Information TEXT, 
+                            Suspicious TEXT 
+                          )""")
+      connection.commit()
+      connection.close()
+  

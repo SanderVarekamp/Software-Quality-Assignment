@@ -3,35 +3,38 @@ from AccountManager import AccountManager
 from Database import *
 import bcrypt
 from LoggedInAccount import *
-from datetime import date
 # from LogActivity import Logs
 
 class main:
 
     def start():
-        Database.MakeDB()
+        Database.AddAllTables()
+        main.hardcodeAdminAcc()
+        main.menu()
+        
+    
+    # def tim():
+    #     now = datetime.datetime.now()
+    #     later = now + datetime.timedelta(seconds=5)
+    #     earlier = now - datetime.timedelta(seconds=5)
+    #     print(earlier)
+    #     print(now)
+    #     print(later)
+    #     print(earlier > now)
+    #     print(earlier < now)
+    #     print(now > later)
+    #     print(now < later)
+    #     print(earlier > later)
+    #     print(earlier < later)
+    #     timedif = later-earlier
+    #     print(timedif)
+    #     print(f"hello {timedif.total_seconds()}")
+    #     print("hello "+str(timedif))
+        
+
         # AccountManager.CreateAccount("Testworlds","TestingPassword1!", "Daan", "Polet", "20", "other", "20", "somewhere", "somecity", "Email@Email.Email", "06-24995072")
         # LoggedInAccount.LogIn("admin", "admin")
         # AccountManager.CreateAccount(input(),"TestingPassword1!", "Daan", "Polet", "20", "other", "20", "somewhere", "somecity", "Email@Email.Email", "06-24995072", "admin")
-        # main.menu()
-
-        # test = "hey"
-        # inp = input()
-        # testing = f""+test+inp
-        # # print(f"{test} hi {test}")
-        # print(testing)
-
-        # testing = input()
-        # connection = sqlite3.connect("DataBase.db")
-        # cursor = connection.cursor()
-        # string = "SELECT * FROM Members WHERE Username = '"+testing+"'"
-        # print(string)
-        # cursor.execute(string)
-        # # cursor.execute('SELECT * FROM Members WHERE Username = ?',(testing,))
-        # rows = cursor.fetchall()
-        # connection.close()
-        # for row in rows:
-        #     print(row)
 
 
     # def testHash():
@@ -45,10 +48,7 @@ class main:
     #     print(tohash)
     #     print(salt)
     #     print(hashed)
-    
-        # Database.InsertAccount(Account("Username","unhashedpassword", "testing", "ing", 20, "other", 20, "somewhere", "somecity", "Email@Email.Email", "06-24995072"))
-        # Account.InsertIntoDatabase(Account.Create())
-        # main.menu()
+
     
     def menu():   
         while True:     
@@ -62,6 +62,7 @@ class main:
                 os.system('cls')
                 if choice == "1":
                     # print("WIP")
+                    Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Going to log in.",False)
                     LoggedInAccount.LogInInput()
                     # account1 = Account("testing", "ing","unhashedpassword", 20, "other", 20, "somewhere", "somecity", "Email@Email.Email", "06-24995072")
 
@@ -83,10 +84,13 @@ class main:
                 choice = input("Enter your choice: ")
                 os.system('cls')
                 if choice == "1":
+                    Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Creating a new account.",False)
                     AccountManager.CreateAccountInput()
                 elif choice == "2":
+                    Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Printing account information.",False)
                     LoggedInAccount.CurrentLoggedInAccount.Print()
                 elif choice == "3":
+                    Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Logging out.",False)
                     LoggedInAccount.LogOut()
                 input("> ")
 
@@ -102,5 +106,4 @@ class main:
 
 
 if __name__ == '__main__':
-    # Logs.PrintLogs()
     main.start()

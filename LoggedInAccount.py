@@ -1,52 +1,98 @@
 import sqlite3
 import bcrypt
-
+from datetime import * 
 from Account import *
+from LogActivity import *
 
 
 class LoggedInAccount:
     CurrentLoggedInAccount = None
 
+    FailedLogInCounter = 0
+    MaxLogInFails = 3
+    StandardTimeCooldownSeconds = 5
+    CurrentTimeCooldownSeconds = StandardTimeCooldownSeconds
+    UnblockTime = datetime.now()
+
     def LogOut():
+        Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Logging out.", "Logged out.",False)
         LoggedInAccount.CurrentLoggedInAccount = None
 
     def LogIn(Username, Password):
+        result = None
+        message = None
+        
+        if LoggedInAccount.UnblockTime > datetime.now():
+            timedif = LoggedInAccount.UnblockTime - datetime.now()
+            return False, "Too many failed attempts. try again in "+str(timedif).split(".")[0]+" seconds."
+
         if not isinstance(Username, str) or not isinstance(Password, str): 
-            return False, "Login credentials are of incorrect format."
+            result = False
+            message = "Login credentials are incorrect."
         
-        connection = sqlite3.connect("DataBase.db")
-        cursor = connection.cursor()
-        cursor.execute("SELECT * FROM Members WHERE Username = ?", (Username,))
-        rows = cursor.fetchone()
-        connection.close()
+        else:
+            connection = sqlite3.connect("DataBase.db")
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM Members WHERE Username = ?", (Username,))
+            rows = cursor.fetchone()
+            connection.close()
 
-        if rows is None or not bcrypt.checkpw(Password.encode("utf-8"),rows[1]): 
-            return False, "Login credentials are incorrect."
+            if rows is None or not bcrypt.checkpw(Password.encode("utf-8"),rows[1]): 
+                result = False
+                message = "Login credentials are incorrect."
+            else:
+                account = Account(rows[0],rows[1],rows[2],rows[3],rows[4],rows[5],rows[6],rows[7],rows[8],rows[9],rows[10], rows[11])
+                LoggedInAccount.CurrentLoggedInAccount = account
+                Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Logging in.", "Logged in.",False)
+                result = True
+                message = "Logged in."
+        if result == True:
+            LoggedInAccount.FailedLogInCounter = 0
+            LoggedInAccount.CurrentTimeCooldownSeconds = LoggedInAccount.StandardTimeCooldownSeconds
+        else:
+            LoggedInAccount.FailedLogInCounter += 1 
 
-        account = Account(rows[0],rows[1],rows[2],rows[3],rows[4],rows[5],rows[6],rows[7],rows[8],rows[9],rows[10], rows[11])
-        LoggedInAccount.CurrentLoggedInAccount = account
-        return True, "Logged in."
-        
-        # if rows is not None:
-        #     # main.LoggedInAccount = Account(rows)
-            # account = Account(rows[0],rows[1],rows[2],rows[3],rows[4],rows[5],rows[6],rows[7],rows[8],rows[9],rows[10], rows[11])
-        #     LoggedInAccount.CurrentLoggedInAccount = account
-        #     return True, "Logged in."
-        # return False, "Login credentials are incorrect."
-    
+        if LoggedInAccount.FailedLogInCounter >= LoggedInAccount.MaxLogInFails:
+            LoggedInAccount.UnblockTime = datetime.now() + timedelta(seconds=LoggedInAccount.CurrentTimeCooldownSeconds)
+            timedif = LoggedInAccount.UnblockTime - datetime.now()
+            Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Logging in", "Too many failed attempts. "+str(timedif).split(".")[0]+" seconds cooldown.",True)
+            message += " Too many failed attempts. try again in "+str(timedif).split(".")[0]+" seconds."
+            LoggedInAccount.FailedLogInCounter -= 1
+            LoggedInAccount.CurrentTimeCooldownSeconds *= 2
+
+        return result, message
+
     # def LogIn(Username, Password):
+    #     if LoggedInAccount.FailedLogInCounter >= LoggedInAccount.MaxLogInFails:
+    #         LoggedInAccount.UnblockTime = datetime.now() + timedelta(seconds=LoggedInAccount.CurrentTimeCooldownSeconds)
+    #         LoggedInAccount.CurrentTimeCooldownSeconds *= 2
+    #         LoggedInAccount.FailedLogInCounter -= 1
+            
+    #     if LoggedInAccount.UnblockTime > datetime.now():
+    #         timedif = LoggedInAccount.UnblockTime - datetime.now()
+    #         Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Logging in", "Too many failed attempts. "+str(timedif).split(".")[0]+" seconds cooldown.",True)
+    #         return False, "Too many failed attempts. try again in "+str(timedif).split(".")[0]+" seconds."
+        
+    #     if not isinstance(Username, str) or not isinstance(Password, str): 
+    #         LoggedInAccount.FailedLogInCounter += 1 
+    #         return False, "Login credentials are incorrect."
+        
     #     connection = sqlite3.connect("DataBase.db")
     #     cursor = connection.cursor()
-    #     cursor.execute("SELECT * FROM Members WHERE Username = ? AND PasswordHash = ?", (Username, Password))
+    #     cursor.execute("SELECT * FROM Members WHERE Username = ?", (Username,))
     #     rows = cursor.fetchone()
     #     connection.close()
-    #     if rows is not None:
-    #         # main.LoggedInAccount = Account(rows)
-    #         account = Account(rows[0],rows[1],rows[2],rows[3],rows[4],rows[5],rows[6],rows[7],rows[8],rows[9],rows[10], rows[11])
-    #         LoggedInAccount.CurrentLoggedInAccount = account
-    #         return True, "Logged in."
-    #     return False, "Login credentials are incorrect."
-    
+
+    #     if rows is None or not bcrypt.checkpw(Password.encode("utf-8"),rows[1]): 
+    #         LoggedInAccount.FailedLogInCounter += 1 
+    #         return False, "Login credentials are incorrect."
+
+    #     account = Account(rows[0],rows[1],rows[2],rows[3],rows[4],rows[5],rows[6],rows[7],rows[8],rows[9],rows[10], rows[11])
+    #     LoggedInAccount.FailedLogInCounter = 0
+    #     LoggedInAccount.CurrentTimeCooldownSeconds = LoggedInAccount.StandardTimeCooldownSeconds
+    #     LoggedInAccount.CurrentLoggedInAccount = account
+    #     Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Logging in.", "Logged in.",False)
+    #     return True, "Logged in."
 
     def LogInInput():
         
@@ -56,5 +102,6 @@ class LoggedInAccount:
         password = input("> ")
         LoggedIn, message = LoggedInAccount.LogIn(username, password)
         print(message)
+        print()
         if not LoggedIn:
             LoggedInAccount.LogInInput()
