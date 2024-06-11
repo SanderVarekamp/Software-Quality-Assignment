@@ -11,7 +11,28 @@ class main:
     def start():
         Database.MakeDB()
         # AccountManager.CreateAccount("Testworlds","TestingPassword1!", "Daan", "Polet", "20", "other", "20", "somewhere", "somecity", "Email@Email.Email", "06-24995072")
-        main.menu()
+        # LoggedInAccount.LogIn("admin", "admin")
+        # AccountManager.CreateAccount(input(),"TestingPassword1!", "Daan", "Polet", "20", "other", "20", "somewhere", "somecity", "Email@Email.Email", "06-24995072", "admin")
+        # main.menu()
+
+        # test = "hey"
+        # inp = input()
+        # testing = f""+test+inp
+        # # print(f"{test} hi {test}")
+        # print(testing)
+
+        # testing = input()
+        # connection = sqlite3.connect("DataBase.db")
+        # cursor = connection.cursor()
+        # string = "SELECT * FROM Members WHERE Username = '"+testing+"'"
+        # print(string)
+        # cursor.execute(string)
+        # # cursor.execute('SELECT * FROM Members WHERE Username = ?',(testing,))
+        # rows = cursor.fetchall()
+        # connection.close()
+        # for row in rows:
+        #     print(row)
+
 
     # def testHash():
     #     password = "Hello"
@@ -55,7 +76,6 @@ class main:
             #     print("good i think")
             #     input("> ")
             else:
-                # print("oh oh")
                 print("1. Create new account")
                 print("2. Account information")
                 print("3. Log out")
@@ -80,20 +100,6 @@ class main:
         connection.commit()
         connection.close()
 
-                
-
-# test insert
-# Database.InsertAccount(Account("testing", "ing", 20, "other", 20, "somewhere", "somecity", "Email@Email.Email", 06-24995072))
-            
-# if not arr[0].isalpha(): print(2);return False
-# if not any(char.isdigit() for char in arr[1]): print(3);return False
-# if len(arr) == 3:
-#     if not (arr[2][:-2].isalpa() & arr[2][-2:].isdigit()): print(4);return False
-# elif len(arr) == 3:
-#     if not arr[2].isalpha(): return print(5);False
-# if len(arr) == 4:
-#     if not arr[3].isdigit(): return print(6);False
-# return True
 
 if __name__ == '__main__':
     # Logs.PrintLogs()

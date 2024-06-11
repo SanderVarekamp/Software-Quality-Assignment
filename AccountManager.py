@@ -111,7 +111,9 @@ class AccountManager:
         AccountManager.CreateAccount(Username, Password, FirstName.capitalize(), LastName.capitalize(), Age, Gender, Weight, Address, City, Email, NewPhoneNumb, AccountType)
 
     def CreateAccount(Username, Password, FirstName, LastName, Age, Gender, Weight, Address, City, Email, NewPhoneNumb, Type = "Member"):
-        if not isinstance(LoggedInAccount.CurrentLoggedInAccount, Account): return
+        if not isinstance(LoggedInAccount.CurrentLoggedInAccount, Account): 
+            print("Aborted.") 
+            return
 
         FailureCounter = 0
         results = [AccountManager.Is_Valid_Username(Username), AccountManager.Is_Valid_Password(Password), AccountManager.Is_Valid_FirstName(FirstName), AccountManager.Is_Valid_LastName(LastName), AccountManager.Is_Valid_age(Age), AccountManager.Is_Valid_gender(Gender), AccountManager.Is_Valid_weight(Weight), AccountManager.Is_Valid_Address(Address), AccountManager.Is_Valid_City(City), AccountManager.Is_Valid_email(Email), AccountManager.Is_Valid_phone(NewPhoneNumb)]
