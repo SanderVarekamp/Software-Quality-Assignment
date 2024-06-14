@@ -11,7 +11,7 @@ class main:
 
     def start():
         # Members.RestoreBackup()
-        # Database.AddAllTables()
+        Database.AddAllTables()
         main.hardcodeAdminAcc()
         # input()
         # Encrypt("DataBase.db", "VeryGoodPassWord")
