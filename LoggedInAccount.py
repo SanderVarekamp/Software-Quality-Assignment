@@ -2,7 +2,7 @@ import sqlite3
 import bcrypt
 from datetime import * 
 from Account import *
-from LogActivity import *
+from Database import *
 
 
 class LoggedInAccount:
@@ -15,7 +15,7 @@ class LoggedInAccount:
     UnblockTime = datetime.now()
 
     def LogOut():
-        Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Logging out.", "Logged out.",False)
+        Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Logging out.", "Logged out.",False)
         LoggedInAccount.CurrentLoggedInAccount = None
 
     def LogIn(Username, Password):
@@ -31,11 +31,13 @@ class LoggedInAccount:
             message = "Login credentials are incorrect."
         
         else:
+            Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
             connection = sqlite3.connect("DataBase.db")
             cursor = connection.cursor()
             cursor.execute("SELECT * FROM Members WHERE Username = ?", (Username,))
             rows = cursor.fetchone()
             connection.close()
+            Encrypt(Members.SourceDB, "VeryGoodPassWord")
 
             if rows is None or not bcrypt.checkpw(Password.encode("utf-8"),rows[1]): 
                 result = False
@@ -43,7 +45,7 @@ class LoggedInAccount:
             else:
                 account = Account(rows[0],rows[1],rows[2],rows[3],rows[4],rows[5],rows[6],rows[7],rows[8],rows[9],rows[10], rows[11])
                 LoggedInAccount.CurrentLoggedInAccount = account
-                Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Logging in.", "Logged in.",False)
+                Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Logging in.", "Logged in.",False)
                 result = True
                 message = "Logged in."
         if result == True:
@@ -55,7 +57,7 @@ class LoggedInAccount:
         if LoggedInAccount.FailedLogInCounter >= LoggedInAccount.MaxLogInFails:
             LoggedInAccount.UnblockTime = datetime.now() + timedelta(seconds=LoggedInAccount.CurrentTimeCooldownSeconds)
             timedif = LoggedInAccount.UnblockTime - datetime.now()
-            Logs.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Logging in", "Too many failed attempts. "+str(timedif).split(".")[0]+" seconds cooldown.",True)
+            Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Logging in", "Too many failed attempts. "+str(timedif).split(".")[0]+" seconds cooldown.",True)
             message += " Too many failed attempts. try again in "+str(timedif).split(".")[0]+" seconds."
             LoggedInAccount.FailedLogInCounter -= 1
             LoggedInAccount.CurrentTimeCooldownSeconds *= 2

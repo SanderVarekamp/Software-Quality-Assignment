@@ -107,8 +107,8 @@ class AccountManager:
         City = AccountManager.input_with_validation("city", AccountManager.Is_Valid_City, "")
         Email = AccountManager.input_with_validation("email", AccountManager.Is_Valid_email, "")
         PhoneNumb = AccountManager.input_with_validation("phone number", AccountManager.Is_Valid_phone, "(6-XXXXXXXX) or (6XXXXXXXX)")
-        NewPhoneNumb = f"31-{PhoneNumb}"
-        AccountManager.CreateAccount(Username, Password, FirstName.capitalize(), LastName.capitalize(), Age, Gender, Weight, Address, City, Email, NewPhoneNumb, AccountType)
+        
+        AccountManager.CreateAccount(Username, Password, FirstName.capitalize(), LastName.capitalize(), Age, Gender, Weight, Address, City, Email, PhoneNumb, AccountType)
 
     def CreateAccount(Username, Password, FirstName, LastName, Age, Gender, Weight, Address, City, Email, NewPhoneNumb, Type = "Member"):
         if not isinstance(LoggedInAccount.CurrentLoggedInAccount, Account): 
@@ -122,6 +122,8 @@ class AccountManager:
                 print(result[1])
                 FailureCounter = FailureCounter + 1
         if FailureCounter > 0: return
+        
+        NewPhoneNumb = f"31-{NewPhoneNumb}"
 
         salt = bcrypt.gensalt()
         Password = bcrypt.hashpw(bytes(Password, 'utf-8'), salt)
@@ -131,7 +133,7 @@ class AccountManager:
 
     def InsertIntoDatabase(account):
         if not isinstance(account, Account): return False, "Given account is not of type AccountManager."
-        
+        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
         connection = sqlite3.connect("DataBase.db")
         cursor = connection.cursor()
         cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
@@ -139,6 +141,7 @@ class AccountManager:
                         account.Address, account.City, account.Email, account.PhoneNumb, account.Type, str(account.RegistrationDate), account.MemberID))
         connection.commit()
         connection.close()
+        Encrypt(Members.SourceDB, "VeryGoodPassWord")
         return True, "AccountManager inserted into database."
 
     # def InsertData(self):
