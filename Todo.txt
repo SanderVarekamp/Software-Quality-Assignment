@@ -8,7 +8,7 @@ a consultant needs to register the client's information in the system. So, the m
 
 ● To add a new member to the system (Daan)
 
-● To modify or update the information of a member in the system () Jason
+● To modify or update the information of a member in the system () Jason (DONE?)
 
 ● To search and retrieve the information of a member (check note 2 below). (Sander)
 
@@ -21,7 +21,7 @@ To update their own password.
 
 ● To define and add a new consultant to the system. (Daan)
 
-● To modify or update an existing consultant’s account and profile. 
+● To modify or update an existing consultant’s account and profile. Jason
 
 ● To delete an existing consultant’s account. Jason
 
