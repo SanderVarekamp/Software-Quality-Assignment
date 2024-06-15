@@ -10,6 +10,7 @@ from Encrypt import *
 class main:
 
     def start():
+        Members.DeleteOldestBackups("Backups")
         # Members.RestoreBackup()
         Database.AddAllTables()
         main.hardcodeAdminAcc()
@@ -95,6 +96,7 @@ class main:
             #     print("good i think")
             #     input("> ")
             elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "admin" or LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "superadmin":
+                Members.DeleteOldestBackups("Backups")
                 print("1. Create new account")
                 print("2. Account information")
                 print("3. User information")
@@ -113,6 +115,7 @@ class main:
                     LoggedInAccount.CurrentLoggedInAccount.Print()
                 elif choice == "3":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Looking at user information",False)
+                    Members.PrintMembers()
                     print("W.I.P")
                 elif choice == "4":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Looking at the activity log",False)
@@ -120,12 +123,14 @@ class main:
                 elif choice == "5":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Updating backup.",False)
                     Members.UpdateBackUp()
+                    print("Created backup")
                 elif choice == "6":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Restoring backup.",False)
                     Members.RestoreBackup()
                 elif choice == "7":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Logging out.",False)
                     LoggedInAccount.LogOut()
+                    print("Logged out")
                 input()
 
             elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "consultant":

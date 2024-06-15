@@ -38,8 +38,9 @@ class AccountManager:
         return result, ("Valid weight" if result == True else "Invalid weight")
     
     def Is_Valid_Address(address):
-        result = address.isalpha()
-        return result, ("Valid address" if result == True else "Invalid address")
+        pattern = re.compile(r'^[A-Za-z\s]+ \d+[a-zA-Z]? \d{4}[A-Z]{2}$')
+        result = bool(pattern.match(address))
+        return result, ("Valid address" if result else "Invalid address")
     
     def Is_Valid_City(city):
         result = city.isalpha()
@@ -56,8 +57,11 @@ class AccountManager:
     def Is_Valid_Username(username):
         connection = sqlite3.connect("DataBase.db")
         cursor = connection.cursor()
-        cursor.execute("SELECT Username FROM Members")
-        ExistingUsernames = cursor.fetchall()
+        try:
+            cursor.execute("SELECT Username FROM Members")
+            ExistingUsernames = cursor.fetchall()
+        except:
+            ExistingUsernames = ""
         connection.close()
 
         username = username.lower()

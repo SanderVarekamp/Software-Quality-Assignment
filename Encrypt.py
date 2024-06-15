@@ -1,6 +1,8 @@
 import os
 import sqlite3
 import secrets
+import glob
+from datetime import date
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives import padding
@@ -44,7 +46,16 @@ class DBEncryptor:
 
         encrypted_file_data = salt + nonce + encryptor.tag + encrypted_data
         if IsBackup:
-            encrypted_file_path = file_path + 'Backup.enc'
+            today = date.today()
+            formatted_date = today.strftime("%d%m%y")
+            count = 0
+            encrypted_file_path = "Backups/" + formatted_date + "." + str(count) + '.dbBackup.enc.zip'
+            files = glob.glob(os.path.join("Backups", '*'))
+            for file_path in files:
+                if os.path.isfile(file_path):
+                    if encrypted_file_path == "Backups/" + os.path.basename(file_path):
+                        count = count+1
+                        encrypted_file_path = "Backups/" + formatted_date + "." + str(count) + '.dbBackup.enc.zip'
         else:
             encrypted_file_path = file_path + '.enc'
 
