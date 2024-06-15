@@ -144,6 +144,108 @@ class AccountManager:
         Encrypt(Members.SourceDB, "VeryGoodPassWord")
         return True, "AccountManager inserted into database."
 
+    def UpdateMemberData(MemberID, field, new_value):
+        with sqlite3.connect('DataBase.db') as conn:
+            cur = conn.cursor()
+            query = f"UPDATE Members SET {field} = ? WHERE MemberID = ?"
+            cur.execute(query, (new_value, MemberID))
+            conn.commit()
+
+    def CheckMemberInData(MemberID):
+        with sqlite3.connect('DataBase.db') as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM Members WHERE MemberID =?", (MemberID,))
+            data = cur.fetchone()
+            if not data:
+                print("No member found with that MemberID.")
+                return False
+            else:
+                return True, data
+
+    def GetMemberData(MemberID, user_type):
+        if user_type.lower() not in ["consultant", "admin", "super admin"]:
+            print("You don't have permission to use this.")
+            return
+        exists, data = AccountManager.CheckMemberInData(MemberID)
+        if exists:
+            print(data)
+            print("=" * 30)
+            print("What would you like to change? ")
+            print("1. First Name")
+            print("2. Last Name")
+            print("3. Age")
+            print("4. Gender")
+            print("5. Weight")
+            print("6. Address")
+            print("7. City")
+            print("8. Email")
+            print("9. Phone Number")  
+
+            option = input("Choose an option to update (1-9): ")
+            fields = ["FirstName", "LastName", "Age", "Gender", "Weight", "Address", "City", "Email", "PhoneNumb"]
+
+            if option in [str(i) for i in range(1, 10)]:
+                field = fields[int(option) - 1]
+                new_value = input(f"What would you like to change {field} to: ")
+
+                validation_func = getattr(AccountManager, f"Is_Valid_{field}", None)
+                if validation_func:
+                    is_valid, message = validation_func(new_value)
+                    if is_valid:
+                        AccountManager.UpdateMemberData(MemberID, field, new_value)
+                        print(f"{field} has been updated.")
+                    else:
+                        print(message)
+                else:
+                    print("No validation function found for this field.")
+            else:
+                print("Invalid option selected.")
+
+    def DeleteAccount(MemberID, user_type):
+        if user_type.lower() not in ["admin", "super admin"]:
+            print("You don't have permission to use this.")
+            return
+
+        exists = AccountManager.CheckMemberInData(MemberID)
+        if exists:
+            while True:
+                print("Would you like to DELETE this member? 1. (YES) or 2. (NO)")
+                user_input = input().strip().lower()
+                if user_input in ["1", "yes", "y"]:
+                    with sqlite3.connect('DataBase.db') as conn:
+                        cur = conn.cursor()
+                        cur.execute("DELETE FROM Members WHERE MemberID =?", (MemberID,))
+                        conn.commit()
+                        print("Member deleted successfully.")
+                        break
+                elif user_input in ["2", "no", "n"]:
+                    print("Deletion canceled.")
+                    break
+                else:
+                    print("Invalid input. Please enter 1 for YES or 2 for NO.")
+                        
+    def ResetPassword(MemberID, user_type):
+        if user_type.lower() not in ["admin", "super admin"]:
+            print("You don't have permission to use this.")
+            return
+        
+        exists = AccountManager.CheckMemberInData(MemberID)
+        if (exists):
+            print("Type your new password: ")
+            user_input = input()
+            is_valid, message = AccountManager.Is_Valid_Password(user_input)
+            if is_valid:
+                # hoe moet ik encrypte data ect doen ? 
+                print("Password has been updated successfully.")
+            else:
+                print(message)
+        else:
+            print("Failed to reset password. Member does not exist.")
+
+
+        
+        
+    
     # def InsertData(self):
     #     connection = sqlite3.connect("DataBase.db")
     #     cursor = connection.cursor()
