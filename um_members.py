@@ -11,7 +11,7 @@ class main:
     def start():
         Members.DeleteOldestBackups("Backups")
         Database.AddAllTables()
-        main.hardcodeAdminAcc()     
+        # main.hardcodeAdminAcc()     
         main.menu()
 
     def menu():   

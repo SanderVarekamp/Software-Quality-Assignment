@@ -43,8 +43,9 @@ class AccountManager:
         return result, ("Valid address" if result else "Invalid address")
     
     def Is_Valid_City(city):
-        result = city.isalpha()
-        return result, ("Valid city" if result == True else "Invalid city")
+        words = city.split()
+        result = all(word.isalpha() for word in words)
+        return result, ("Valid city" if result else "Invalid city")
     
     def Is_Valid_email(email):
         result = re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
@@ -342,6 +343,8 @@ class AccountManager:
                     AccountManager.ChoiceConsultant(member, LoggedinAccount, loop)
             else:
                 print("No account found")
+                print("Press Enter to continue")
+                input()
     
     def ChoiceAdmin(member, LoggedinAccount, loop):
         while loop:
