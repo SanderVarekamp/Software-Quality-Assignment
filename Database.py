@@ -1,6 +1,7 @@
 import sqlite3
-from datetime import datetime
+from datetime import *
 from Account import *
+
 import pandas as pd
 import os
 import re
@@ -51,17 +52,42 @@ class Database:
       connection.close()
 
     def LogAction(username: str, activity: str, info: str, sus: bool):
-        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
-        now = datetime.now()
-        time = now.strftime("%H:%M:%S")
-        date = now.strftime("%d/%m/%Y")
-        connection = sqlite3.connect("DataBase.db")
-        cursor = connection.cursor()
-        cursor.execute("INSERT INTO ActivityLog VALUES (?, ?, ?, ?, ?, ?)", 
-                       (str(date), str(time), username, activity, info, sus))
-        connection.commit()
-        connection.close()
-        Encrypt(Members.SourceDB, "VeryGoodPassWord")
+        max_retries = 5
+        retry_delay = 0.1
+        timeout = 30
+
+        for attempt in range(max_retries):
+            try:
+                Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+                now = datetime.now()
+                time_str = now.strftime("%H:%M:%S")
+                date_str = now.strftime("%d/%m/%Y")
+
+                connection = sqlite3.connect("DataBase.db", timeout=timeout)
+                connection.execute("PRAGMA journal_mode=WAL")
+                cursor = connection.cursor()
+
+                cursor.execute("INSERT INTO ActivityLog VALUES (?, ?, ?, ?, ?, ?)", 
+                               (str(date_str), str(time_str), username, activity, info, sus))
+                connection.commit()
+                connection.close()
+                Encrypt(Members.SourceDB, "VeryGoodPassWord")
+                break 
+            except sqlite3.OperationalError as e:
+                if 'database is locked' in str(e):
+                    if attempt < max_retries - 1:
+                        time.sleep(retry_delay)
+                        retry_delay *= 2
+                    else:
+                        print(f"Failed to log action after {max_retries} attempts due to a locked database.")
+                        raise
+                else:
+                    raise
+            finally:
+                try:
+                    connection.close()
+                except Exception as close_err:
+                    print(f"Error closing the database connection: {close_err}")
 
     def PrintLogs():
       Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
@@ -71,7 +97,6 @@ class Database:
       Encrypt(Members.SourceDB, "VeryGoodPassWord")
 
 class Members:
-    # def __init__(self):
     SourceDB = "DataBase.db"
     BackupDB = "DataBase_Backup.db"
 
@@ -179,167 +204,167 @@ class Members:
         conn.close()
         Encrypt(Members.SourceDB, "VeryGoodPassWord")
 
-    def SearchAccount(quary):
-        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
-        connection = sqlite3.connect("DataBase.db")
-        cursor = connection.cursor()
-        search_pattern = f"%{quary}%"
-        cursor.execute("""SELECT * FROM Members WHERE 
-                        Username LIKE ? OR
-                        PasswordHash LIKE ? OR
-                        FirstName LIKE ? OR
-                        LastName LIKE ? OR
-                        Age LIKE ? OR
-                        Gender LIKE ? OR
-                        Weight LIKE ? OR
-                        Address LIKE ? OR
-                        City LIKE ? OR
-                        Email LIKE ? OR
-                        PhoneNumber LIKE ? OR
-                        Type LIKE ? OR
-                        RegistrationDate LIKE ? OR
-                        MemberID LIKE ? LIMIT 1""",
-                    (search_pattern, search_pattern, search_pattern, search_pattern, search_pattern,
-                        search_pattern, search_pattern, search_pattern, search_pattern, search_pattern,
-                        search_pattern, search_pattern, search_pattern, search_pattern))
-        row = cursor.fetchone()
-        connection.close()
-        Encrypt(Members.SourceDB, "VeryGoodPassWord")
-        if row:
-            account = Account(
-                Username=row[0],
-                PasswordHash=row[1],
-                FirstName=row[2],
-                LastName=row[3],
-                Age=row[4],
-                Gender=row[5],
-                Weight=row[6],
-                Address=row[7],
-                City=row[8],
-                Email=row[9],
-                PhoneNumb=row[10],
-                Type=row[11]
-            )
-            account.RegistrationDate = row[12]
-            account.MemberID = row[13]
-            return account
-        else:
-            return None
+    # def SearchAccount(query, currentuser):
+    #     Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+    #     connection = sqlite3.connect("DataBase.db")
+    #     cursor = connection.cursor()
+    #     search_pattern = f"%{query}%"
+  
+    #     base_query = """SELECT * FROM Members WHERE 
+    #                     (Username LIKE ? OR
+    #                     PasswordHash LIKE ? OR
+    #                     FirstName LIKE ? OR
+    #                     LastName LIKE ? OR
+    #                     Age LIKE ? OR
+    #                     Gender LIKE ? OR
+    #                     Weight LIKE ? OR
+    #                     Address LIKE ? OR
+    #                     City LIKE ? OR
+    #                     Email LIKE ? OR
+    #                     PhoneNumber LIKE ? OR
+    #                     Type LIKE ? OR
+    #                     RegistrationDate LIKE ? OR
+    #                     MemberID LIKE ?)"""
+    #     print(currentuser.Type.lower())
+    #     if currentuser.Type.lower() == "consultant":
+    #         base_query += " AND Type = 'members'"
         
-    def DeleteAccount(account):
-        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
-        if not isinstance(account, Account):
-            raise ValueError("Expected an Account instance")
-        connection = sqlite3.connect("DataBase.db")
-        cursor = connection.cursor()
-        cursor.execute("DELETE FROM Members WHERE MemberID = ?", (account.MemberID,))
-        connection.commit()
-        connection.close()
-        Encrypt(Members.SourceDB, "VeryGoodPassWord")
+    #     elif currentuser.Type.lower() == "admin":
+    #         base_query += " AND (Type = 'members' OR Type = 'Consultant')"
+    #     elif currentuser.Type.lower() == "superadmin":
+    #         base_query += " AND Type != 'superadmin'"
+    #     base_query += " LIMIT 1"
+    #     cursor.execute(base_query, (search_pattern, search_pattern, search_pattern, search_pattern, search_pattern,
+    #                                 search_pattern, search_pattern, search_pattern, search_pattern, search_pattern,
+    #                                 search_pattern, search_pattern, search_pattern, search_pattern))
+    #     row = cursor.fetchone()
+    #     connection.close()
+    #     Encrypt(Members.SourceDB, "VeryGoodPassWord")
+    #     if row:
+    #         account = Account(
+    #             Username=row[0],
+    #             PasswordHash=row[1],
+    #             FirstName=row[2],
+    #             LastName=row[3],
+    #             Age=row[4],
+    #             Gender=row[5],
+    #             Weight=row[6],
+    #             Address=row[7],
+    #             City=row[8],
+    #             Email=row[9],
+    #             PhoneNumb=row[10],
+    #             Type=row[11]
+    #         )
+    #         account.RegistrationDate = row[12]
+    #         account.MemberID = row[13]
+    #         return account
+    #     else:
+    #         return None
+        
+    # def DeleteAccount(account):
+    #     Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+    #     if not isinstance(account, Account):
+    #         raise ValueError("Expected an Account instance")
+    #     connection = sqlite3.connect("DataBase.db")
+    #     cursor = connection.cursor()
+    #     cursor.execute("DELETE FROM Members WHERE MemberID = ?", (account.MemberID,))
+    #     connection.commit()
+    #     connection.close()
+    #     Encrypt(Members.SourceDB, "VeryGoodPassWord")
 
 
-    def EditAccount(account):
-        if not isinstance(account, Account):
-            raise ValueError("Expected an Account instance")
-        print("="* 30)
-        print("What would u like to change? ")
-        print("1. First Name:")
-        print("2. Last Name:")
-        print("3. Age:")
-        print("4. Gender:")
-        print("5. Weight:")
-        print("6. Address:")
-        print("7. City:")
-        print("8. Email:")
-        print("9. Phone Number:")  
+    # def EditAccount(account):
+    #     if not isinstance(account, Account):
+    #         raise ValueError("Expected an Account instance")
+    #     print("="* 30)
+    #     print("What would u like to change? ")
+    #     print("1. First Name:")
+    #     print("2. Last Name:")
+    #     print("3. Age:")
+    #     print("4. Gender:")
+    #     print("5. Weight:")
+    #     print("6. Address:")
+    #     print("7. City:")
+    #     print("8. Email:")
+    #     print("9. Phone Number:")  
 
-        option = input("Choose an option to update (1-9): ")
-        fields = ["FirstName", "LastName", "Age", "Gender", "Weight", "Address", "City", "Email", "PhoneNumb"]
+    #     option = input("Choose an option to update (1-9): ")
+    #     fields = ["FirstName", "LastName", "Age", "Gender", "Weight", "Address", "City", "Email", "PhoneNumb"]
 
-        if option in [str(i) for i in range(1, 10)]:
-            field = fields[int(option) - 1]
-            new_value = input(f"What would you like to change {field} to: ")
-            Members.UpdateMemberData(account.MemberID, field, new_value)
-            print(f"{field} has been updated.")
-        else:
-            print("Invalid option selected.")
+    #     if option in [str(i) for i in range(1, 10)]:
+    #         field = fields[int(option) - 1]
+    #         new_value = input(f"What would you like to change {field} to: ")
+    #         Members.UpdateMemberData(account.MemberID, field, new_value)
+    #         print(f"{field} has been updated.")
+    #     else:
+    #         print("Invalid option selected.")
 
-    def UpdateMemberData(MemberID, field, new_value):
-        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
-        with sqlite3.connect('DataBase.db') as conn:
-            cur = conn.cursor()
-            query = f"UPDATE Members SET {field} = ? WHERE MemberID = ?"
-            cur.execute(query, (new_value, MemberID))
-            conn.commit()
-        Encrypt(Members.SourceDB, "VeryGoodPassWord")
+    # def UpdateMemberData(MemberID, field, new_value):
+    #     Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+    #     with sqlite3.connect('DataBase.db') as conn:
+    #         cur = conn.cursor()
+    #         query = f"UPDATE Members SET {field} = ? WHERE MemberID = ?"
+    #         cur.execute(query, (new_value, MemberID))
+    #         conn.commit()
+    #     Encrypt(Members.SourceDB, "VeryGoodPassWord")
 
-    def ChangeAccount(LoggedinAccount):
-        AccountToFind = input("Enter account detail: ")
-        Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Looking up {AccountToFind}",False)
-        member = Members.SearchAccount(AccountToFind)
-        if member != None:
-            loop = True
-            if (LoggedinAccount.Type.lower() == "superadmin"):
-                if member.Type.lower() == "superadmin" :
-                    loop = False
-            elif (LoggedinAccount.Type.lower() == "admin"):
-                if member.Type.lower() == "superadmin" or  member.Type.lower() == "admin":
-                    loop = False
-            elif (LoggedinAccount.Type.lower() == "consultant"):
-                if member.Type.lower() != "member":
-                    loop = False
-
-            if loop:
-                if LoggedinAccount.Type.lower() == "superadmin" or LoggedinAccount.Type.lower() == "admin":
-                    Members.ChoiceAdmin(member, LoggedinAccount, loop)
-                elif LoggedinAccount.Type.lower() == "consultant":
-                    Members.ChoiceConsultant(member, LoggedinAccount, loop)
-            else:
-                print("No account found")
+    # def ChangeAccount(LoggedinAccount):
+    #     AccountToFind = input("Enter account detail: ")
+    #     Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Looking up {AccountToFind}",False)
+    #     member = Members.SearchAccount(AccountToFind, LoggedinAccount)
+    #     if member != None:
+    #         loop = True
+    #         if loop:
+    #             if LoggedinAccount.Type.lower() == "superadmin" or LoggedinAccount.Type.lower() == "admin":
+    #                 Members.ChoiceAdmin(member, LoggedinAccount, loop)
+    #             elif LoggedinAccount.Type.lower() == "consultant":
+    #                 Members.ChoiceConsultant(member, LoggedinAccount, loop)
+    #         else:
+    #             print("No account found")
     
-    def ChoiceAdmin(member, LoggedinAccount, loop):
-        while loop:
-            print("Found account:")
-            member.Print()
-            print("1. Return")
-            print("2. Edit account")
-            print("3. Delete account")
-            print("4. Reset password")
-            choice2 = input("Enter your choice: ")
-            if choice2 == "1":
-                loop = False
-            elif choice2 == "2":
-                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Editing {member.Username}",False)
-                loop = False
-                Members.EditAccount(member)
-            elif choice2 == "3":
-                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Deleting {member.Username}",False)
-                Members.DeleteAccount(member)
-                print("Account succesfully deleted!")
-                input()
-                loop = False
-            elif choice2 == "4":
-                print("WIP")
-                input()
-                loop = False
-            else:
-                print("Invalid input")
-                input()
+    # def ChoiceAdmin(member, LoggedinAccount, loop):
+    #     while loop:
+    #         print("Found account:")
+    #         member.Print()
+    #         print("1. Return")
+    #         print("2. Edit account")
+    #         print("3. Delete account")
+    #         print("4. Reset password")
+    #         choice2 = input("Enter your choice: ")
+    #         if choice2 == "1":
+    #             loop = False
+    #         elif choice2 == "2":
+    #             Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Editing {member.Username}",False)
+    #             loop = False
+    #             Members.EditAccount(member)
+    #         elif choice2 == "3":
+    #             Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Deleting {member.Username}",False)
+    #             Members.DeleteAccount(member)
+    #             print("Account succesfully deleted!")
+    #             input()
+    #             loop = False
+    #         elif choice2 == "4":
+    #             AccountManager.ResetPassword(member)
+    #             input()
+    #             loop = False
+    #         else:
+    #             print("Invalid input")
+    #             input()
 
-    def ChoiceConsultant(member, LoggedinAccount, loop):
-        while loop:
-            print("Found account:")
-            member.Print()
-            print("1. Return")
-            print("2. Edit account")
-            choice2 = input("Enter your choice: ")
-            if choice2 == "1":
-                loop = False
-                return
-            elif choice2 == "2":
-                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Editing {member.Username}",False)
-                loop = False
-                Members.EditAccount(member)
-            else:
-                print("Invalid input")
-                input()
+    # def ChoiceConsultant(member, LoggedinAccount, loop):
+    #     while loop:
+    #         print("Found account:")
+    #         member.Print()
+    #         print("1. Return")
+    #         print("2. Edit account")
+    #         choice2 = input("Enter your choice: ")
+    #         if choice2 == "1":
+    #             loop = False
+    #             return
+    #         elif choice2 == "2":
+    #             Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Editing {member.Username}",False)
+    #             loop = False
+    #             Members.EditAccount(member)
+    #         else:
+    #             print("Invalid input")
+    #             input()

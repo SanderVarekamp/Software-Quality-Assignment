@@ -5,7 +5,6 @@ from Account import *
 from LoggedInAccount import *
 
 class AccountManager:
-
     def input_with_validation(prompt, validation_func, requirement):
             while True:
                 print("What is the users "+prompt+"? "+requirement)
@@ -162,44 +161,211 @@ class AccountManager:
         connection.close()
         Encrypt(Members.SourceDB, "VeryGoodPassWord")
         return True, "AccountManager inserted into database."
+    
+    TempPasswordForReset = "TempPassword123!"
 
-    # def InsertData(self):
-    #     connection = sqlite3.connect("DataBase.db")
-    #     cursor = connection.cursor()
-    #     cursor.execute("""CREATE TABLE IF NOT EXISTS Members (
-    #                         FirstName TEXT, 
-    #                         LastName TEXT, 
-    #                         Age INTEGER, 
-    #                         Gender TEXT, 
-    #                         Weight INTEGER, 
-    #                         Address TEXT, 
-    #                         City TEXT, 
-    #                         Email TEXT, 
-    #                         PhoneNumber TEXT, 
-    #                         Type TEXT,
-    #                         RegistrationDate TEXT, 
-    #                         MemberID INTEGER
-    #                       )""")
-    #     cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-    #                    (self.FirstName, self.LastName, self.Age, self.Gender, self.Weight, 
-    #                     self.Address, self.City, self.Email, self.PhoneNumb, self.IsConsult, 
-    #                     self.IsSysAdm, self.IsSupAdm, str(self.RegistrationDate), self.MemberID))
-    #     connection.commit()
-    #     connection.close()
+    # na inloggen als wachtwoord gelijk is aan AccountManager.TempPasswordForReset
+    def ResetPasswordInput(Acc: Account):
+        print("What will be your new Password?")
+        NewPassword = input("> ")
+        AccountManager.ChangePassword(NewPassword, Acc)
+
+    # voor admin om password van gebruiker te veranderen naar AccountManager.TempPasswordForReset
+    def ResetPassword(Acc: Account):
+        AccountManager.ChangePassword(AccountManager.TempPasswordForReset, Acc)
+
+    def ChangePassword(NewPassword: str, Acc: Account, CurrentPassword: str = None) -> tuple[bool, str]:
+        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+        connection = sqlite3.connect(Members.SourceDB)
+        cursor = connection.cursor()
+        if CurrentPassword != None:
+            cursor.execute("SELECT PasswordHash FROM Members WHERE Username = ?",(Acc.Username,))
+            PWHash = cursor.fetchone()[0]
+            if not bcrypt.checkpw(CurrentPassword.encode("utf-8"),PWHash):
+                connection.close()
+                Encrypt(Members.SourceDB, "VeryGoodPassWord")
+                return False, "Current password is incorrect"
+        Result, Message = AccountManager.Is_Valid_Password(NewPassword)
+        if not Result:
+            connection.close()
+            Encrypt(Members.SourceDB, "VeryGoodPassWord")
+            return Result, Message 
+        cursor.execute( "UPDATE Members SET PasswordHash = ? WHERE Username = ?", (bcrypt.hashpw(NewPassword.encode("utf-8"),bcrypt.gensalt()), Acc.Username))
+        connection.commit()
+        connection.close()
+        Encrypt(Members.SourceDB, "VeryGoodPassWord")
+        return True, "Changed Password"
+        
+    def ChangePasswordInput():
+        print("What is your current password?")
+        CurrentPassword = input("> ")
+        print("What will be your new password?")
+        NewPassword = input("> ")
+        Result, Message = AccountManager.ChangePassword(NewPassword, LoggedInAccount.CurrentLoggedInAccount, CurrentPassword)
+        if not Result:
+            print(Message)
+
+    def SearchAccount(query, currentuser):
+        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+        connection = sqlite3.connect("DataBase.db")
+        cursor = connection.cursor()
+        search_pattern = f"%{query}%"
+  
+        base_query = """SELECT * FROM Members WHERE 
+                        (Username LIKE ? OR
+                        PasswordHash LIKE ? OR
+                        FirstName LIKE ? OR
+                        LastName LIKE ? OR
+                        Age LIKE ? OR
+                        Gender LIKE ? OR
+                        Weight LIKE ? OR
+                        Address LIKE ? OR
+                        City LIKE ? OR
+                        Email LIKE ? OR
+                        PhoneNumber LIKE ? OR
+                        Type LIKE ? OR
+                        RegistrationDate LIKE ? OR
+                        MemberID LIKE ?)"""
+        print(currentuser.Type.lower())
+        if currentuser.Type.lower() == "consultant":
+            base_query += " AND Type = 'Member'"
+        elif currentuser.Type.lower() == "admin":
+            base_query += " AND(Type = 'Member' OR Type = 'Consultant')"
+        elif currentuser.Type.lower() == "superadmin":
+            base_query += " AND NOT Type = 'SuperAdmin'"
+        base_query += " LIMIT 1"
+        cursor.execute(base_query, (search_pattern, search_pattern, search_pattern, search_pattern, search_pattern,
+                                    search_pattern, search_pattern, search_pattern, search_pattern, search_pattern,
+                                    search_pattern, search_pattern, search_pattern, search_pattern))
+        row = cursor.fetchone()
+        connection.close()
+        Encrypt(Members.SourceDB, "VeryGoodPassWord")
+        if row:
+            account = Account(
+                Username=row[0],
+                PasswordHash=row[1],
+                FirstName=row[2],
+                LastName=row[3],
+                Age=row[4],
+                Gender=row[5],
+                Weight=row[6],
+                Address=row[7],
+                City=row[8],
+                Email=row[9],
+                PhoneNumb=row[10],
+                Type=row[11]
+            )
+            account.RegistrationDate = row[12]
+            account.MemberID = row[13]
+            return account
+        else:
+            print("No account found")
+            return None
+        
+    def DeleteAccount(account):
+        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+        if not isinstance(account, Account):
+            raise ValueError("Expected an Account instance")
+        connection = sqlite3.connect("DataBase.db")
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM Members WHERE MemberID = ?", (account.MemberID,))
+        connection.commit()
+        connection.close()
+        Encrypt(Members.SourceDB, "VeryGoodPassWord")
 
 
+    def EditAccount(account):
+        if not isinstance(account, Account):
+            raise ValueError("Expected an Account instance")
+        print("="* 30)
+        print("What would u like to change? ")
+        print("1. First Name:")
+        print("2. Last Name:")
+        print("3. Age:")
+        print("4. Gender:")
+        print("5. Weight:")
+        print("6. Address:")
+        print("7. City:")
+        print("8. Email:")
+        print("9. Phone Number:")  
 
-    # Password = input("Enter your old password: ")
-    # if bcrypt.checkpw(Password.encode("utf-8"),LoggedInAccount.CurrentLoggedInAccount.PasswordHash):
-    #     print("Enter new password:")
-    #     newpass = AccountManager.input_with_validation("password", AccountManager.Is_Valid_Password, "Must be between 12 and 30 characters long and must contain at least 1 lowercase, uppercase, digit and special character.")
-    #     newpass2 = input("Enter new password again: ")
-    #     if newpass == newpass2:
-    #         salt = bcrypt.gensalt()
-    #         Passwordhash = bcrypt.hashpw(bytes(newpass, 'utf-8'), salt)
-    #         Members.UpdateMemberData(LoggedInAccount.CurrentLoggedInAccount.MemberID, "PasswordHash", "test")
-    #         print("Password changed!")
-    #     else:
-    #         print("Passwords do not match")
-    # else:
-    #     print("Login credentials are incorrect.")
+        option = input("Choose an option to update (1-9): ")
+        fields = ["FirstName", "LastName", "Age", "Gender", "Weight", "Address", "City", "Email", "PhoneNumb"]
+
+        if option in [str(i) for i in range(1, 10)]:
+            field = fields[int(option) - 1]
+            new_value = input(f"What would you like to change {field} to: ")
+            AccountManager.UpdateMemberData(account.MemberID, field, new_value)
+            print(f"{field} has been updated.")
+        else:
+            print("Invalid option selected.")
+
+    def UpdateMemberData(MemberID, field, new_value):
+        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+        with sqlite3.connect('DataBase.db') as conn:
+            cur = conn.cursor()
+            query = f"UPDATE Members SET {field} = ? WHERE MemberID = ?"
+            cur.execute(query, (new_value, MemberID))
+            conn.commit()
+        Encrypt(Members.SourceDB, "VeryGoodPassWord")
+
+    def ChangeAccount(LoggedinAccount):
+        AccountToFind = input("Enter account detail: ")
+        Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Looking up {AccountToFind}",False)
+        member = AccountManager.SearchAccount(AccountToFind, LoggedinAccount)
+        if member != None:
+            loop = True
+            if loop:
+                if LoggedinAccount.Type.lower() == "superadmin" or LoggedinAccount.Type.lower() == "admin":
+                    AccountManager.ChoiceAdmin(member, LoggedinAccount, loop)
+                elif LoggedinAccount.Type.lower() == "consultant":
+                    AccountManager.ChoiceConsultant(member, LoggedinAccount, loop)
+            else:
+                print("No account found")
+    
+    def ChoiceAdmin(member, LoggedinAccount, loop):
+        while loop:
+            print("Found account:")
+            member.Print()
+            print("1. Return")
+            print("2. Edit account")
+            print("3. Delete account")
+            print("4. Reset password")
+            choice2 = input("Enter your choice: ")
+            if choice2 == "1":
+                loop = False
+            elif choice2 == "2":
+                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Editing {member.Username}",False)
+                loop = False
+                AccountManager.EditAccount(member)
+            elif choice2 == "3":
+                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Deleting {member.Username}",False)
+                AccountManager.DeleteAccount(member)
+                print("Account succesfully deleted!")
+                input()
+                loop = False
+            elif choice2 == "4":
+                AccountManager.ResetPassword(member)
+                input()
+                loop = False
+            else:
+                print("Invalid input")
+                input()
+
+    def ChoiceConsultant(member, LoggedinAccount, loop):
+        while loop:
+            print("Found account:")
+            member.Print()
+            print("1. Return")
+            print("2. Edit account")
+            choice2 = input("Enter your choice: ")
+            if choice2 == "1":
+                loop = False
+                return
+            elif choice2 == "2":
+                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Editing {member.Username}",False)
+                loop = False
+                AccountManager.EditAccount(member)
+            else:
+                print("Invalid input")
+                input()
