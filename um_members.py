@@ -70,7 +70,10 @@ class main:
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Logging out.",False)
                     LoggedInAccount.LogOut()
                     print("Logged out")
+                print()
+                print("press Enter to continue ")
                 input()
+                
             
             elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "consultant":
                 print("1. Create new account")
