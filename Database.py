@@ -1,16 +1,18 @@
 import sqlite3
 from datetime import datetime
+from Account import *
 import pandas as pd
 import os
 import re
 import glob
 from Encrypt import *
+
 class Database:
-    
     def AddAllTables():
-       Database.AddTableMembers()
-       Database.AddTableLog()
-       Encrypt(Members.SourceDB, "VeryGoodPassWord")
+        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+        Database.AddTableMembers()
+        Database.AddTableLog()
+        Encrypt(Members.SourceDB, "VeryGoodPassWord")
 
     def AddTableMembers():
         connection = sqlite3.connect("DataBase.db")
@@ -150,10 +152,13 @@ class Members:
             print("No backups found")
             return
         while check:
-            value = input("What backup do you want to restore?(0 for most recent)")
+            value = input("What backup do you want to restore?(0 for most recent)(return to return to main menu)")
             if value == "0":
                 name = Members.GetMostRecentFile("Backups")
                 check = False
+            elif value.lower() == "return":
+                check = False
+                return
             else:
                 for x in range(count):
                     if value == str(x+1):
@@ -179,18 +184,113 @@ class Members:
         conn.close()
         Encrypt(Members.SourceDB, "VeryGoodPassWord")
 
-    def FindMember(Firstname, Lastname):
+    # def FindMember(Firstname, Lastname):
+    #     Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+    #     conn = sqlite3.connect(Members.SourceDB)
+    #     cur = conn.cursor()
+    #     try:
+    #         query = "SELECT * FROM Members WHERE Firstname=? AND Lastname=?"
+    #         params = (Firstname, Lastname)
+    #         # cur.execute(query, params)
+    #         # rows = cur.fetchall()
+    #         df = pd.read_sql_query(query, conn, params=params)
+    #         print(df)
+    #     except:
+    #         print("No member by that name found")
+    #     conn.close()
+    #     Encrypt(Members.SourceDB, "VeryGoodPassWord")
+
+
+    def SearchAccount(quary):
         Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
-        conn = sqlite3.connect(Members.SourceDB)
-        cur = conn.cursor()
-        try:
-            query = "SELECT * FROM Members WHERE Firstname=? AND Lastname=?"
-            params = (Firstname, Lastname)
-            # cur.execute(query, params)
-            # rows = cur.fetchall()
-            df = pd.read_sql_query(query, conn, params=params)
-            print(df)
-        except:
-            print("No member by that name found")
-        conn.close()
+        connection = sqlite3.connect("DataBase.db")
+        cursor = connection.cursor()
+        search_pattern = f"%{quary}%"
+        cursor.execute("""SELECT * FROM Members WHERE 
+                        Username LIKE ? OR
+                        PasswordHash LIKE ? OR
+                        FirstName LIKE ? OR
+                        LastName LIKE ? OR
+                        Age LIKE ? OR
+                        Gender LIKE ? OR
+                        Weight LIKE ? OR
+                        Address LIKE ? OR
+                        City LIKE ? OR
+                        Email LIKE ? OR
+                        PhoneNumber LIKE ? OR
+                        Type LIKE ? OR
+                        RegistrationDate LIKE ? OR
+                        MemberID LIKE ? LIMIT 1""",
+                    (search_pattern, search_pattern, search_pattern, search_pattern, search_pattern,
+                        search_pattern, search_pattern, search_pattern, search_pattern, search_pattern,
+                        search_pattern, search_pattern, search_pattern, search_pattern))
+        row = cursor.fetchone()
+        connection.close()
+        Encrypt(Members.SourceDB, "VeryGoodPassWord")
+        if row:
+            account = Account(
+                Username=row[0],
+                PasswordHash=row[1],
+                FirstName=row[2],
+                LastName=row[3],
+                Age=row[4],
+                Gender=row[5],
+                Weight=row[6],
+                Address=row[7],
+                City=row[8],
+                Email=row[9],
+                PhoneNumb=row[10],
+                Type=row[11]
+            )
+            account.RegistrationDate = row[12]
+            account.MemberID = row[13]
+            return account
+        else:
+            return None
+        
+    def DeleteAccount(account):
+        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+        if not isinstance(account, Account):
+            raise ValueError("Expected an Account instance")
+        connection = sqlite3.connect("DataBase.db")
+        cursor = connection.cursor()
+        cursor.execute("DELETE FROM Members WHERE MemberID = ?", (account.MemberID,))
+        connection.commit()
+        connection.close()
+        Encrypt(Members.SourceDB, "VeryGoodPassWord")
+
+
+    def EditAccount(account):
+        if not isinstance(account, Account):
+            raise ValueError("Expected an Account instance")
+        print("="* 30)
+        print("What would u like to change? ")
+        print("1. First Name:")
+        print("2. Last Name:")
+        print("3. Age:")
+        print("4. Gender:")
+        print("5. Weight:")
+        print("6. Address:")
+        print("7. City:")
+        print("8. Email:")
+        print("9. Phone Number:")  
+
+        option = input("Choose an option to update (1-9): ")
+        fields = ["FirstName", "LastName", "Age", "Gender", "Weight", "Address", "City", "Email", "PhoneNumb"]
+
+        if option in [str(i) for i in range(1, 10)]:
+            field = fields[int(option) - 1]
+            new_value = input(f"What would you like to change {field} to: ")
+            Members.UpdateMemberData(account.MemberID, field, new_value)
+            print(f"{field} has been updated.")
+        else:
+            print("Invalid option selected.")
+
+    def UpdateMemberData(MemberID, field, new_value):
+        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+        with sqlite3.connect('DataBase.db') as conn:
+            cur = conn.cursor()
+            query = f"UPDATE Members SET {field} = ? WHERE MemberID = ?"
+            cur.execute(query, (new_value, MemberID))
+            conn.commit()
         Encrypt(Members.SourceDB, "VeryGoodPassWord")

@@ -2,7 +2,7 @@ from datetime import date, datetime
 import random
 import sqlite3
 
-from Database import Members
+#from Database import Members
 from Encrypt import Decrypt, Encrypt
 
 class Account:
@@ -29,7 +29,7 @@ class Account:
         random_digits = [random.randint(0, 9) for _ in range(7)]
         Numb9 = (Numb0 + Numb1 + sum(random_digits)) % 10
         randomNumb = int(f"{Numb0}{Numb1}{''.join(map(str, random_digits))}{Numb9}")
-        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
+        Decrypt("DataBase.db.enc", "VeryGoodPassWord", "DataBase.db")
         with sqlite3.connect('DataBase.db') as conn:
             cur = conn.cursor()
             try:
@@ -43,12 +43,11 @@ class Account:
             except:
                 pass
         conn.close()
-        Encrypt(Members.SourceDB, "VeryGoodPassWord")
+        Encrypt("DataBase.db", "VeryGoodPassWord")
         return randomNumb
     
     def Print(self):
         print("Username:", self.Username)
-        print("Password Hash:",self.PasswordHash)
         print("Fullname:", self.FirstName, self.LastName)
         print("Age:",self.Age)
         print("Gender:",self.Gender)
@@ -57,3 +56,5 @@ class Account:
         print("Email:",self.Email)
         print("Phone Number:",self.PhoneNumb)
         print("Account Type:",self.Type)
+        print("Registration date: ", self.RegistrationDate)
+        print("Member ID", self.MemberID)

@@ -68,25 +68,28 @@ class DBEncryptor:
         return encrypted_file_path
 
     def decrypt_file(self, encrypted_file_path: str, output_file_path: str) -> None:
-        with open(encrypted_file_path, 'rb') as encrypted_file:
-            encrypted_data = encrypted_file.read()
+        try:
+            with open(encrypted_file_path, 'rb') as encrypted_file:
+                encrypted_data = encrypted_file.read()
 
-        salt = encrypted_data[:self.SALT_SIZE]
-        nonce = encrypted_data[self.SALT_SIZE:self.SALT_SIZE + self.NONCE_SIZE]
-        tag = encrypted_data[self.SALT_SIZE + self.NONCE_SIZE:self.SALT_SIZE + self.NONCE_SIZE + 16]
-        ciphertext = encrypted_data[self.SALT_SIZE + self.NONCE_SIZE + 16:]
+            salt = encrypted_data[:self.SALT_SIZE]
+            nonce = encrypted_data[self.SALT_SIZE:self.SALT_SIZE + self.NONCE_SIZE]
+            tag = encrypted_data[self.SALT_SIZE + self.NONCE_SIZE:self.SALT_SIZE + self.NONCE_SIZE + 16]
+            ciphertext = encrypted_data[self.SALT_SIZE + self.NONCE_SIZE + 16:]
 
-        key = self._generate_key(salt)
+            key = self._generate_key(salt)
 
-        cipher = Cipher(algorithms.AES(key), modes.GCM(nonce, tag), backend=self.BACKEND)
-        decryptor = cipher.decryptor()
-        padded_data = decryptor.update(ciphertext) + decryptor.finalize()
+            cipher = Cipher(algorithms.AES(key), modes.GCM(nonce, tag), backend=self.BACKEND)
+            decryptor = cipher.decryptor()
+            padded_data = decryptor.update(ciphertext) + decryptor.finalize()
 
-        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
-        data = unpadder.update(padded_data) + unpadder.finalize()
+            unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+            data = unpadder.update(padded_data) + unpadder.finalize()
 
-        with open(output_file_path, 'wb') as output_file:
-            output_file.write(data)
+            with open(output_file_path, 'wb') as output_file:
+                output_file.write(data)
+        except:
+            return
 
     def read_db(self, db_file_path: str) -> None:
         conn = sqlite3.connect(db_file_path)
