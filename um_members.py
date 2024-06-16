@@ -5,13 +5,11 @@ import bcrypt
 from LoggedInAccount import *
 from Encrypt import *
 
-# from LogActivity import Logs
 
 class main:
 
     def start():
         Members.DeleteOldestBackups("Backups")
-        # Members.RestoreBackup()
         Database.AddAllTables()
         main.hardcodeAdminAcc()     
         main.menu()
@@ -96,6 +94,8 @@ class main:
                 elif choice == "5":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Logging out.",False)
                     LoggedInAccount.LogOut()
+                print()
+                print("Press Enter to continue ")
                 input()
             else:
                 print("1. Log out")
@@ -104,29 +104,25 @@ class main:
                 if choice == "1":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Logging out.",False)
                     LoggedInAccount.LogOut()
+
+                print()
+                print("Press Enter to continue ")
                 input()
+                
 
         
     def hardcodeAdminAcc():
-        Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
-        connection = sqlite3.connect("DataBase.db")
+        Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+        connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                       ("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
-                        "admin", "admin", "admin@admin.admin", "612121212", "SuperAdmin", str(date.today().strftime("%d/%m/%Y")), 1)) # from datetime import date
+                       ("super_admin", bcrypt.hashpw("Admin_123?".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
+                        "admin", "admin", "admin@hr.nl", "0107944000", "SuperAdmin", str(date.today().strftime("%d/%m/%Y")), 1)) # from datetime import date
         connection.commit()
         connection.close()
-        Encrypt(Members.SourceDB, "VeryGoodPassWord")
-        #super_admin, password: Admin_123?
+        Encrypt(Members.SourceDB, Members.HardCodePassword)
+   
 
 if __name__ == '__main__':
-    Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
     main.start()
-    # Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
-    # connection = sqlite3.connect("DataBase.db")
-    # cursor = connection.cursor()
-    # cursor.execute("SELECT * FROM Members WHERE NOT Type = superadmin")
-    # rows = cursor.fetchall()
-    # for row in rows:
-    #     print(row)
-    # connection.close()
+    

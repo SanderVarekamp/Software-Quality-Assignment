@@ -1,7 +1,7 @@
 from datetime import date, datetime
 import random
 import sqlite3
-
+from Database import Members
 #from Database import Members
 from Encrypt import Decrypt, Encrypt
 
@@ -29,8 +29,11 @@ class Account:
         random_digits = [random.randint(0, 9) for _ in range(7)]
         Numb9 = (Numb0 + Numb1 + sum(random_digits)) % 10
         randomNumb = int(f"{Numb0}{Numb1}{''.join(map(str, random_digits))}{Numb9}")
-        Decrypt("DataBase.db.enc", "VeryGoodPassWord", "DataBase.db")
-        with sqlite3.connect('DataBase.db') as conn:
+        Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+        
+        conn = None
+        try:
+            conn = sqlite3.connect(Members.SourceDB)
             cur = conn.cursor()
             try:
                 cur.execute('SELECT MemberID FROM Members')
@@ -40,11 +43,15 @@ class Account:
                     random_digits = [random.randint(0, 9) for _ in range(7)]
                     Numb9 = (Numb0 + Numb1 + sum(random_digits)) % 10
                     randomNumb = int(f"{Numb0}{Numb1}{''.join(map(str, random_digits))}{Numb9}")
-            except:
-                pass
-        conn.close()
-        Encrypt("DataBase.db", "VeryGoodPassWord")
-        return randomNumb
+            except Exception as e:
+                print(f"An error occurred while querying the database: {e}")
+        except Exception as e:
+            print(f"An error occurred while connecting to the database: {e}")
+        finally:
+            if conn:
+                conn.close()
+            Encrypt(Members.SourceDB, Members.HardCodePassword)
+            return randomNumb
     
     def Print(self):
         print("Username:", self.Username)
