@@ -147,6 +147,8 @@ class AccountManager:
         connection.close()
         Encrypt(Members.SourceDB, "VeryGoodPassWord")
         return True, "AccountManager inserted into database."
+        
+
 
     # def InsertData(self):
     #     connection = sqlite3.connect("DataBase.db")
