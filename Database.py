@@ -9,13 +9,13 @@ from Encrypt import *
 
 class Database:
     def AddAllTables():
-        Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         Database.AddTableMembers()
         Database.AddTableLog()
         Encrypt(Members.SourceDB, Members.HardCodePassword)
 
     def AddTableMembers():
-        connection = sqlite3.connect("DataBase.db")
+        connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS Members (
                             Username TEXT,
@@ -57,7 +57,7 @@ class Database:
 
         for attempt in range(max_retries):
             try:
-                Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+                Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
                 now = datetime.now()
                 time_str = now.strftime("%H:%M:%S")
                 date_str = now.strftime("%d/%m/%Y")
@@ -90,7 +90,7 @@ class Database:
                     print(f"Error closing the database connection: {close_err}")
 
     def PrintLogs():
-      Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+      Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
       conn = sqlite3.connect(Members.SourceDB)
       print (pd.read_sql_query("SELECT * FROM ActivityLog", conn))
       conn.close()
@@ -98,10 +98,11 @@ class Database:
 
 class Members:
     SourceDB = "DataBase.db"
+    EncryptedDB = "DataBase.db.enc"
     BackupDB = "DataBase_Backup.db"
     HardCodePassword = "VeryGoodPassWord"
     def UpdateBackUp():
-        Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         EncryptBackup(Members.SourceDB, Members.HardCodePassword)
     
     def DeleteOldestBackups(directory, MaxBackups = 10):
@@ -172,7 +173,7 @@ class Members:
             print("No backups found")
             return
         while check:
-            print("What backup do you want to restore?(0 for most recent)(return to return to main menu)")
+            print("What backup do you want to restore? (0 for most recent) (return to return to main menu)")
             value = input("> ")
             if value == "0":
                 name = Members.GetMostRecentFile("Backups")
@@ -194,7 +195,7 @@ class Members:
         print("Backup restored")
 
     def PrintMembers():
-        Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         conn = sqlite3.connect(Members.SourceDB)
         cur = conn.cursor()
         try:

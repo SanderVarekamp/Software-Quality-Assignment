@@ -33,7 +33,7 @@ class LoggedInAccount:
         
         else:
             try:
-                Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+                Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
                 connection = sqlite3.connect(Members.SourceDB)
                 cursor = connection.cursor()
                 try:

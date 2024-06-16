@@ -22,7 +22,8 @@ class main:
                 print("Where would you like to go?")
                 print("1. Log in")
                 print()
-                choice = input("Enter your choice: ")
+                print("Enter your choice: ")
+                choice = input("> ")
                 os.system('cls')
                 if choice == "1":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Going to log in.",False)
@@ -34,14 +35,15 @@ class main:
                 print("1. Create new account")
                 print("2. Account information")
                 print("3. All user information")
-                print("4. Find user(edit and delete)")
+                print("4. Find user (edit and delete)")
                 print("5. Show activity log")
                 print("6. Make backup")
                 print("7. restore backup")
                 print("8. Change password")
                 print("9. Log out")
                 print()
-                choice = input("Enter your choice: ")
+                print("Enter your choice: ")
+                choice = input("> ")
                 os.system('cls')
                 if choice == "1":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Creating a new account.",False)
@@ -53,36 +55,41 @@ class main:
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Looking at all user information",False)
                     Members.PrintMembers()
                 elif choice == "4":
+                    Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Searching for user",False)
                     AccountManager.ChangeAccount(LoggedInAccount.CurrentLoggedInAccount)
                 elif choice == "5":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Looking at the activity log",False)
                     Database.PrintLogs()
+                    print()
+                    print("Press Enter to continue")
+                    input()
                 elif choice == "6":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Creating new backup.",False)
                     Members.UpdateBackUp()
                     print("Created backup")
+                    print("Press Enter to continue")
+                    input()
                 elif choice == "7":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Restoring backup.",False)
                     Members.RestoreBackup()
                 elif choice == "8":
+                    Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Changing password",False)
                     AccountManager.ChangePasswordInput()
                 elif choice == "9":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Logging out.",False)
                     LoggedInAccount.LogOut()
                     print("Logged out")
-                print()
-                print("press Enter to continue ")
-                input()
                 
             
             elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "consultant":
                 print("1. Create new account")
                 print("2. Account information")
-                print("3. Find Member")
+                print("3. Find user")
                 print("4. Change Password")
                 print("5. Log out")
                 print()
-                choice = input("Enter your choice: ")
+                print("Enter your choice: ")
+                choice = input("> ")
                 os.system('cls')
                 if choice == "1":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Creating a new account.",False)
@@ -91,31 +98,28 @@ class main:
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Printing account information.",False)
                     LoggedInAccount.CurrentLoggedInAccount.Print()
                 elif choice == "3":
+                    Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Searching for user",False)
                     AccountManager.ChangeAccount(LoggedInAccount.CurrentLoggedInAccount)
                 elif choice == "4":
+                    Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Changing password",False)
                     AccountManager.ChangePasswordInput()
                 elif choice == "5":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Logging out.",False)
                     LoggedInAccount.LogOut()
-                print()
-                print("Press Enter to continue ")
-                input()
+
             else:
                 print("1. Log out")
                 print()
-                choice = input("Enter your choice: ")
+                print("Enter your choice: ")
+                choice = input("> ")
                 if choice == "1":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Logging out.",False)
                     LoggedInAccount.LogOut()
-
-                print()
-                print("Press Enter to continue ")
-                input()
                 
 
         
     def hardcodeAdminAcc():
-        Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
@@ -128,4 +132,5 @@ class main:
 
 if __name__ == '__main__':
     main.start()
+
     

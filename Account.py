@@ -29,7 +29,7 @@ class Account:
         random_digits = [random.randint(0, 9) for _ in range(7)]
         Numb9 = (Numb0 + Numb1 + sum(random_digits)) % 10
         randomNumb = int(f"{Numb0}{Numb1}{''.join(map(str, random_digits))}{Numb9}")
-        Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         
         conn = None
         try:

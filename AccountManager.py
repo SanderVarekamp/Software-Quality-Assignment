@@ -1,3 +1,4 @@
+import os
 import re
 import sqlite3
 import bcrypt
@@ -147,11 +148,12 @@ class AccountManager:
         Password = bcrypt.hashpw(bytes(Password, 'utf-8'), salt)
         NewAccount = Account(Username, Password, FirstName.capitalize(), LastName.capitalize(), Age, Gender, Weight, Address, City, Email, NewPhoneNumb, Type)
         AccountManager.InsertIntoDatabase(NewAccount)
+        Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Creating account", f"Made account with username: {Username}",False)
         print("Account created.")
 
     def InsertIntoDatabase(account):
         if not isinstance(account, Account): return False, "Given account is not of type AccountManager."
-        Decrypt("DataBase.db.enc", Members.HardCodePassword , Members.SourceDB)
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword , Members.SourceDB)
         connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
@@ -175,7 +177,7 @@ class AccountManager:
         AccountManager.ChangePassword(AccountManager.TempPasswordForReset, Acc)
 
     def ChangePassword(NewPassword: str, Acc: Account, CurrentPassword: str = None) -> tuple[bool, str]:
-        Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         if CurrentPassword != None:
@@ -204,10 +206,15 @@ class AccountManager:
         Result, Message = AccountManager.ChangePassword(NewPassword, LoggedInAccount.CurrentLoggedInAccount, CurrentPassword)
         if not Result:
             print(Message)
+            print("Press Enter to continue")
+            input()
+        else:
+            Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Changing password", "Changed password",False)
+
 
     def SearchAccount(query, currentuser):
-        Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
-        connection = sqlite3.connect("DataBase.db")
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         search_pattern = f"%{query}%"
   
@@ -226,7 +233,6 @@ class AccountManager:
                         Type LIKE ? OR
                         RegistrationDate LIKE ? OR
                         MemberID LIKE ?)"""
-        print(currentuser.Type.lower())
         if currentuser.Type.lower() == "consultant":
             base_query += " AND Type = 'Member'"
         elif currentuser.Type.lower() == "admin":
@@ -263,11 +269,11 @@ class AccountManager:
             return None
         
     def DeleteAccount(account):
-        Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         if not isinstance(account, Account):
             raise ValueError("Expected an Account instance")
         try:
-            connection = sqlite3.connect("DataBase.db")
+            connection = sqlite3.connect(Members.SourceDB)
             cursor = connection.cursor()
             try:
                 cursor.execute("DELETE FROM Members WHERE MemberID = ?", (account.MemberID,))
@@ -298,20 +304,23 @@ class AccountManager:
         print("8. Email:")
         print("9. Phone Number:")  
         
-        print("Choose an option to update (1-9): ")
+        print("Choose an option to update (1-9) or anything else to go back: ")
         option = input("> ")
         fields = ["FirstName", "LastName", "Age", "Gender", "Weight", "Address", "City", "Email", "PhoneNumb"]
-
+        os.system('cls')
         if option in [str(i) for i in range(1, 10)]:
             field = fields[int(option) - 1]
-            new_value = input(f"What would you like to change {field} to: ")
+            print(f"What would you like to change {field} to: ")
+            new_value = input("> ")
             AccountManager.UpdateMemberData(account.MemberID, field, new_value)
+            Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Changing account details", f"Changed {field} to {new_value} ofr {account.Username}",False)
             print(f"{field} has been updated.")
         else:
-            print("Invalid option selected.")
+            print("Going back")
+
 
     def UpdateMemberData(MemberID, field, new_value):
-        Decrypt("DataBase.db.enc", Members.HardCodePassword, Members.SourceDB)
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         with sqlite3.connect(Members.SourceDB) as conn:
             cur = conn.cursor()
             query = f"UPDATE Members SET {field} = ? WHERE MemberID = ?"
@@ -320,8 +329,9 @@ class AccountManager:
         Encrypt(Members.SourceDB, Members.HardCodePassword)
 
     def ChangeAccount(LoggedinAccount):
-        AccountToFind = input("Enter account detail: ")
-        Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Looking up {AccountToFind}",False)
+        print("Enter account detail: ")
+        AccountToFind = input("> ")
+        Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Searching for user", f"Looking up {AccountToFind}",False)
         member = AccountManager.SearchAccount(AccountToFind, LoggedinAccount)
         if member != None:
             loop = True
@@ -341,31 +351,28 @@ class AccountManager:
             print("2. Edit account")
             print("3. Delete account")
             print("4. Reset password")
-            choice2 = input("Enter your choice: ")
+            print("Enter your choice: ")
+            choice2 = input("> ")
+            os.system('cls')
             if choice2 == "1":
                 loop = False
             elif choice2 == "2":
-                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Editing {member.Username}",False)
+                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Editing account details", f"Editing user: {member.Username}",False)
                 loop = False
                 AccountManager.EditAccount(member)
             elif choice2 == "3":
-                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Deleting {member.Username}",False)
+                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Editing account details", f"Deleting {member.Username}",False)
                 AccountManager.DeleteAccount(member)
-                print("Account succesfully deleted!")
-                print()
-                print("Press Enter to continue ")
-                input()
-                
+                print("Account succesfully deleted!")                
                 loop = False
             elif choice2 == "4":
+                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Editing account details", f"Reseting password for: {member.Username}",False)
                 AccountManager.ResetPassword(member)
-                print()
-                print("Press Enter to continue ")
-                input()
                 loop = False
             else:
-                print("Invalid input (Press Enter to continue )")
-                input()
+                print()
+                print("Invalid input")
+                print()
 
     def ChoiceConsultant(member, LoggedinAccount, loop):
         while loop:
@@ -373,14 +380,17 @@ class AccountManager:
             member.Print()
             print("1. Return")
             print("2. Edit account")
-            choice2 = input("Enter your choice: ")
+            print("Enter your choice: ")
+            choice2 = input("> ")
+            os.system('cls')
             if choice2 == "1":
                 loop = False
                 return
             elif choice2 == "2":
-                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Editing {member.Username}",False)
+                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Changing account details", f"Editing user: {member.Username}",False)
                 loop = False
                 AccountManager.EditAccount(member)
             else:
+                print()
                 print("Invalid input")
-                input()
+                print()
