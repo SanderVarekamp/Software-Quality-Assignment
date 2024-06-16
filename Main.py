@@ -104,7 +104,8 @@ class main:
                 print("5. Show activity log")
                 print("6. Make backup")
                 print("7. restore backup")
-                print("8. Log out")
+                print("8. Change password")
+                print("9. Log out")
                 print()
                 choice = input("Enter your choice: ")
                 os.system('cls')
@@ -130,6 +131,7 @@ class main:
                                 print("1. Return")
                                 print("2. Edit account")
                                 print("3. Delete account")
+                                print("4. Reset password")
                                 choice2 = input("Enter your choice: ")
                                 if choice2 == "1":
                                     loop = False
@@ -144,6 +146,8 @@ class main:
                                     Members.DeleteAccount(member)
                                     print("Account succesfully deleted!")
                                     input()
+                                elif choice2 == "4":
+                                    print("WIP")
                                 else:
                                     print("Invalid input")
                                     input()
@@ -162,6 +166,8 @@ class main:
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Restoring backup.",False)
                     Members.RestoreBackup()
                 elif choice == "8":
+                    print("WIP")
+                elif choice == "9":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Logging out.",False)
                     LoggedInAccount.LogOut()
                     print("Logged out")
@@ -176,7 +182,8 @@ class main:
                 print("5. Show activity log")
                 print("6. Make backup")
                 print("7. restore backup")
-                print("8. Log out")
+                print("8. Change password")
+                print("9. Log out")
                 print()
                 choice = input("Enter your choice: ")
                 os.system('cls')
@@ -202,6 +209,7 @@ class main:
                                 print("1. Return")
                                 print("2. Edit account")
                                 print("3. Delete account")
+                                print("4. Reset password")
                                 choice2 = input("Enter your choice: ")
                                 if choice2 == "1":
                                     loop = False
@@ -216,6 +224,8 @@ class main:
                                     Members.DeleteAccount(member)
                                     print("Account succesfully deleted!")
                                     input()
+                                elif choice2 == "4":
+                                    print("WIP")
                                 else:
                                     print("Invalid input")
                                     input()
@@ -234,6 +244,8 @@ class main:
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Restoring backup.",False)
                     Members.RestoreBackup()
                 elif choice == "8":
+                    print("WIP")
+                elif choice == "9":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Logging out.",False)
                     LoggedInAccount.LogOut()
                     print("Logged out")
@@ -243,7 +255,8 @@ class main:
                 print("1. Create new account")
                 print("2. Account information")
                 print("3. Find Member")
-                print("4. Log out")
+                print("4. Update Password")
+                print("5. Log out")
                 print()
                 choice = input("Enter your choice: ")
                 os.system('cls')
@@ -281,6 +294,8 @@ class main:
                     else:
                         print("No account found")
                 elif choice == "4":
+                    print("WIP")
+                elif choice == "5":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Logging out.",False)
                     LoggedInAccount.LogOut()
                 input()
@@ -304,7 +319,7 @@ class main:
         connection.commit()
         connection.close()
         Encrypt(Members.SourceDB, "VeryGoodPassWord")
-
+        #super_admin, password: Admin_123?
 
 if __name__ == '__main__':
     main.start()
