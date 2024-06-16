@@ -104,30 +104,45 @@ class AccountManager:
         Password = AccountManager.input_with_validation("password", AccountManager.Is_Valid_Password, "Must be between 12 and 30 characters long and must contain at least 1 lowercase, uppercase, digit and special character.")
         FirstName = AccountManager.input_with_validation("first name", AccountManager.Is_Valid_FirstName, "")
         LastName = AccountManager.input_with_validation("last name", AccountManager.Is_Valid_LastName, "")
-        Age = AccountManager.input_with_validation("age", AccountManager.Is_Valid_age, "")
-        Gender = AccountManager.input_with_validation("gender", AccountManager.Is_Valid_gender, "Please enter 'male', 'female', or 'other'.")
-        Weight = AccountManager.input_with_validation("weight", AccountManager.Is_Valid_weight, "")
-        Address = AccountManager.input_with_validation("address", AccountManager.Is_Valid_Address, "Please enter your street name, house number and postal code")
-        City = AccountManager.input_with_validation("city", AccountManager.Is_Valid_City, "")
-        Email = AccountManager.input_with_validation("email", AccountManager.Is_Valid_email, "")
-        PhoneNumb = AccountManager.input_with_validation("phone number", AccountManager.Is_Valid_phone, "(6-XXXXXXXX) or (6XXXXXXXX)")
-        
+        if AccountType.lower() != "consultant" and AccountType.lower() != "admin":
+            Age = AccountManager.input_with_validation("age", AccountManager.Is_Valid_age, "")
+            Gender = AccountManager.input_with_validation("gender", AccountManager.Is_Valid_gender, "Please enter 'male', 'female', or 'other'.")
+            Weight = AccountManager.input_with_validation("weight", AccountManager.Is_Valid_weight, "")
+            Address = AccountManager.input_with_validation("address", AccountManager.Is_Valid_Address, "Please enter your street name, house number and postal code")
+            City = AccountManager.input_with_validation("city", AccountManager.Is_Valid_City, "")
+            Email = AccountManager.input_with_validation("email", AccountManager.Is_Valid_email, "")
+            PhoneNumb = AccountManager.input_with_validation("phone number", AccountManager.Is_Valid_phone, "(6-XXXXXXXX) or (6XXXXXXXX)")
+        else:
+            Age = None
+            Gender = None
+            Weight = None
+            Address = None
+            City =  None
+            Email = None
+            PhoneNumb = None
         AccountManager.CreateAccount(Username, Password, FirstName.capitalize(), LastName.capitalize(), Age, Gender, Weight, Address, City, Email, PhoneNumb, AccountType)
 
     def CreateAccount(Username, Password, FirstName, LastName, Age, Gender, Weight, Address, City, Email, NewPhoneNumb, Type = "Member"):
         if not isinstance(LoggedInAccount.CurrentLoggedInAccount, Account): 
             print("Aborted.") 
             return
-
         FailureCounter = 0
-        results = [AccountManager.Is_Valid_Username(Username), AccountManager.Is_Valid_Password(Password), AccountManager.Is_Valid_FirstName(FirstName), AccountManager.Is_Valid_LastName(LastName), AccountManager.Is_Valid_age(Age), AccountManager.Is_Valid_gender(Gender), AccountManager.Is_Valid_weight(Weight), AccountManager.Is_Valid_Address(Address), AccountManager.Is_Valid_City(City), AccountManager.Is_Valid_email(Email), AccountManager.Is_Valid_phone(NewPhoneNumb)]
-        for result in results:
-            if not result[0]:
-                print(result[1])
-                FailureCounter = FailureCounter + 1
+        if Type.lower() == "consultant" or Type.lower() == "admin":
+            results = [AccountManager.Is_Valid_Username(Username), AccountManager.Is_Valid_Password(Password), AccountManager.Is_Valid_FirstName(FirstName), AccountManager.Is_Valid_LastName(LastName)]
+            for result in results:
+                if not result[0]:
+                    print(result[1])
+                    FailureCounter = FailureCounter + 1
+        else:
+            results = [AccountManager.Is_Valid_Username(Username), AccountManager.Is_Valid_Password(Password), AccountManager.Is_Valid_FirstName(FirstName), AccountManager.Is_Valid_LastName(LastName), AccountManager.Is_Valid_age(Age), AccountManager.Is_Valid_gender(Gender), AccountManager.Is_Valid_weight(Weight), AccountManager.Is_Valid_Address(Address), AccountManager.Is_Valid_City(City), AccountManager.Is_Valid_email(Email), AccountManager.Is_Valid_phone(NewPhoneNumb)]
+            for result in results:
+                if not result[0]:
+                    print(result[1])
+                    FailureCounter = FailureCounter + 1
         if FailureCounter > 0: return
-        
-        NewPhoneNumb = f"31-{NewPhoneNumb}"
+
+        if Type.lower() != "consultant" and Type.lower() != "admin":
+            NewPhoneNumb = f"31-{NewPhoneNumb}"
 
         salt = bcrypt.gensalt()
         Password = bcrypt.hashpw(bytes(Password, 'utf-8'), salt)
@@ -172,3 +187,19 @@ class AccountManager:
     #     connection.commit()
     #     connection.close()
 
+
+
+    # Password = input("Enter your old password: ")
+    # if bcrypt.checkpw(Password.encode("utf-8"),LoggedInAccount.CurrentLoggedInAccount.PasswordHash):
+    #     print("Enter new password:")
+    #     newpass = AccountManager.input_with_validation("password", AccountManager.Is_Valid_Password, "Must be between 12 and 30 characters long and must contain at least 1 lowercase, uppercase, digit and special character.")
+    #     newpass2 = input("Enter new password again: ")
+    #     if newpass == newpass2:
+    #         salt = bcrypt.gensalt()
+    #         Passwordhash = bcrypt.hashpw(bytes(newpass, 'utf-8'), salt)
+    #         Members.UpdateMemberData(LoggedInAccount.CurrentLoggedInAccount.MemberID, "PasswordHash", "test")
+    #         print("Password changed!")
+    #     else:
+    #         print("Passwords do not match")
+    # else:
+    #     print("Login credentials are incorrect.")

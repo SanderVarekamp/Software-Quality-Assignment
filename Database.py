@@ -66,13 +66,8 @@ class Database:
     def PrintLogs():
       Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
       conn = sqlite3.connect('DataBase.db')
-    #   cur = conn.cursor()
       print (pd.read_sql_query("SELECT * FROM ActivityLog", conn))
-    #   cur.execute("SELECT * FROM ActivityLog")
-    #   rows = cur.fetchall()
       conn.close()
-    #   for row in rows:
-    #      print(row)
       Encrypt(Members.SourceDB, "VeryGoodPassWord")
 
 class Members:
@@ -184,23 +179,6 @@ class Members:
         conn.close()
         Encrypt(Members.SourceDB, "VeryGoodPassWord")
 
-    # def FindMember(Firstname, Lastname):
-    #     Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
-    #     conn = sqlite3.connect(Members.SourceDB)
-    #     cur = conn.cursor()
-    #     try:
-    #         query = "SELECT * FROM Members WHERE Firstname=? AND Lastname=?"
-    #         params = (Firstname, Lastname)
-    #         # cur.execute(query, params)
-    #         # rows = cur.fetchall()
-    #         df = pd.read_sql_query(query, conn, params=params)
-    #         print(df)
-    #     except:
-    #         print("No member by that name found")
-    #     conn.close()
-    #     Encrypt(Members.SourceDB, "VeryGoodPassWord")
-
-
     def SearchAccount(quary):
         Decrypt("DataBase.db.enc", "VeryGoodPassWord", Members.SourceDB)
         connection = sqlite3.connect("DataBase.db")
@@ -294,3 +272,74 @@ class Members:
             cur.execute(query, (new_value, MemberID))
             conn.commit()
         Encrypt(Members.SourceDB, "VeryGoodPassWord")
+
+    def ChangeAccount(LoggedinAccount):
+        AccountToFind = input("Enter account detail: ")
+        Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Looking up {AccountToFind}",False)
+        member = Members.SearchAccount(AccountToFind)
+        if member != None:
+            loop = True
+            if (LoggedinAccount.Type.lower() == "superadmin"):
+                if member.Type.lower() == "superadmin" :
+                    loop = False
+            elif (LoggedinAccount.Type.lower() == "admin"):
+                if member.Type.lower() == "superadmin" or  member.Type.lower() == "admin":
+                    loop = False
+            elif (LoggedinAccount.Type.lower() == "consultant"):
+                if member.Type.lower() != "member":
+                    loop = False
+
+            if loop:
+                if LoggedinAccount.Type.lower() == "superadmin" or LoggedinAccount.Type.lower() == "admin":
+                    Members.ChoiceAdmin(member, LoggedinAccount, loop)
+                elif LoggedinAccount.Type.lower() == "consultant":
+                    Members.ChoiceConsultant(member, LoggedinAccount, loop)
+            else:
+                print("No account found")
+    
+    def ChoiceAdmin(member, LoggedinAccount, loop):
+        while loop:
+            print("Found account:")
+            member.Print()
+            print("1. Return")
+            print("2. Edit account")
+            print("3. Delete account")
+            print("4. Reset password")
+            choice2 = input("Enter your choice: ")
+            if choice2 == "1":
+                loop = False
+            elif choice2 == "2":
+                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Editing {member.Username}",False)
+                loop = False
+                Members.EditAccount(member)
+            elif choice2 == "3":
+                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Deleting {member.Username}",False)
+                Members.DeleteAccount(member)
+                print("Account succesfully deleted!")
+                input()
+                loop = False
+            elif choice2 == "4":
+                print("WIP")
+                input()
+                loop = False
+            else:
+                print("Invalid input")
+                input()
+
+    def ChoiceConsultant(member, LoggedinAccount, loop):
+        while loop:
+            print("Found account:")
+            member.Print()
+            print("1. Return")
+            print("2. Edit account")
+            choice2 = input("Enter your choice: ")
+            if choice2 == "1":
+                loop = False
+                return
+            elif choice2 == "2":
+                Database.LogAction(LoggedinAccount.Username if LoggedinAccount != None else None,"Selecting from menu options.", f"Editing {member.Username}",False)
+                loop = False
+                Members.EditAccount(member)
+            else:
+                print("Invalid input")
+                input()
