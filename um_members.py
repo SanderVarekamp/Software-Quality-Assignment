@@ -9,11 +9,12 @@ from Encrypt import *
 class main:
 
     def start():
-        Members.DeleteOldestBackups("Backups")
-        Database.AddAllTables()
-        # main.hardcodeSuperAdmin()   
-        # main.hardcodeConsultant()  
-        main.menu()
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        # Members.DeleteOldestBackups("Backups")
+        # Database.AddAllTables()
+        # # main.hardcodeSuperAdmin()   
+        # # main.hardcodeConsultant()  
+        # main.menu()
 
     def menu():   
         while True:     
