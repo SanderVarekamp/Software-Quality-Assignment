@@ -90,7 +90,7 @@ class AccountManager:
         if isinstance(LoggedInAccount.CurrentLoggedInAccount, Account):
             AccountTypeList = ['member', 'consultant', 'admin']
             if LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "admin": AccountTypeList.remove("admin")
-            elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "consultant": AccountTypeList.remove("consultant")
+            # elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "consultant": AccountTypeList.remove("consultant")
 
             result = type.lower() in AccountTypeList
             return result, ("Valid type." if result == True else "Invalid type.")
