@@ -87,8 +87,7 @@ class AccountManager:
                 if(re.search(r'[A-Z]', password)): # Password must contain at least one uppercase letter
                     if(re.search(r'\d', password)): # Password must contain at least one digit
                         if(re.search(f"[{re.escape(special_characters)}]", password)): # Password must contain at least one special character
-                            if(re.match(r'^[a-zA-Z0-9' + re.escape(special_characters) + ']+$', password)): # Password does not contains invalid characters
-                                return True
+                            return True
         return False
 
     def Is_Valid_AccountType(type):
