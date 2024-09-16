@@ -6,54 +6,60 @@ from Account import *
 from LoggedInAccount import *
 from Database import Members
 class AccountManager:
-    def input_with_validation(prompt, validation_func, requirement):
-            while True:
-                print("What is the users "+prompt+"? "+requirement)
-                value = input("> ")
-                result = validation_func(value)
-                if result[0]:
-                    return value
-                else:
-                    print(result[1])
-                    print()
 
     def Is_Valid_FirstName(firstname):
-        result = firstname.isalpha()
-        return result, ("Valid name" if result == True else "Invalid first name input.")
+        if(firstname.isalpha()): 
+            return True
+        return False
     
     def Is_Valid_LastName(lastname):
-        result = lastname.isalpha()
-        return result, ("Valid name" if result == True else "Invalid last name input.")
+        if(lastname.isalpha()): 
+            return True
+        return False
     
     def Is_Valid_age(age):
-        result = (isinstance(age, int) or age.isdigit()) and 0 < int(age) < 150
-        return result, ("Valid age" if result == True else "Invalid age")
+        if(isinstance(age, int) or age.isdigit()):
+            if(0 < int(age) < 150):
+                return True
+        return False
     
     def Is_Valid_gender(gender):
-        result = gender.lower() in ['male', 'female', 'other']
-        return result, ("Valid gender" if result == True else "Invalid gender")
+        if(gender.lower() in ['male', 'female', 'other']):
+            return True        
+        return False
     
     def Is_Valid_weight(weight):
-        result = weight.replace('.', '', 1).isdigit() and 0 < float(weight) < 1000
-        return result, ("Valid weight" if result == True else "Invalid weight")
+        if(weight.replace('.', '', 1).isdigit()):
+            if(0 < float(weight) < 1000):
+                return True
+        return False
     
     def Is_Valid_Address(address):
         pattern = re.compile(r'^[A-Za-z\s]+ \d+[a-zA-Z]? \d{4}[A-Z]{2}$')
-        result = bool(pattern.match(address))
-        return result, ("Valid address" if result else "Invalid address")
+        if(bool(pattern.match(address))):
+            return True
+        return False
     
     def Is_Valid_City(city):
         words = city.split()
-        result = all(word.isalpha() for word in words)
-        return result, ("Valid city" if result else "Invalid city")
+        if(all(word.isalpha() for word in words)):
+            return True
+        return False
     
     def Is_Valid_email(email):
-        result = re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
-        return result, ("Valid Email" if result == True else "Invalid Email")
+        pattern = re.compile(r"[^@]+@[^@]+\.[^@]+")
+        if(bool(re.match(pattern, email))):
+            return True
+        return False
     
     def Is_Valid_phone(phone):
-        result = re.match(r"6-\d{8}$", phone) is not None or re.match(r"6\d{8}$", phone) is not None, "Invalid phone number."
-        return result, ("Valid phone number" if result == True else "Invalid phone number")
+        pattern1 = re.compile(r"6-\d{8}$")
+        pattern2 = re.compile(r"6\d{8}$")
+        if(bool(re.match(pattern1, phone))):
+            return True
+        if(bool(re.match(pattern2, phone))):
+            return True
+        return False
 
     def Is_Valid_Username(username):
         connection = sqlite3.connect(Members.SourceDB)
@@ -66,36 +72,128 @@ class AccountManager:
         connection.close()
 
         username = username.lower()
-        
-        if len(username) < 8: return False, "Username must be at least 8 characters long."
-        if len(username) > 10: return False, "Username must be no longer than 10 characters."
-        if not re.match(r'^[a-z_]', username): False, "Username must start with a letter or underscore."
-        if not re.match(r'^[a-z0-9_\'\.]+$', username): return False, "Username can only contain letters, numbers, underscores, apostrophes, and periods."
-        if username in ExistingUsernames: return False, "Username already exists."
-        return True, "Username is valid."
+        if(7 < len(username) < 11): # username at least 8 characters and no longer than 10
+            if(re.match(r'^[a-z_]', username)): # Username must start with a letter or underscore
+                if(re.match(r'^[a-z0-9_\'\.]+$', username)): # Username can only contain letters, numbers, underscores, apostrophes, and periods
+                    if(username not in ExistingUsernames): # username doesnt exist yet
+                        return True
+        return False
+
     
     def Is_Valid_Password(password):
-        if len(password) < 12: return False, "Password must be at least 12 characters long."
-        if len(password) > 30: return False, "Password must be no longer than 30 characters."
-        if not re.search(r'[a-z]', password): return False, "Password must contain at least one lowercase letter."
-        if not re.search(r'[A-Z]', password): return False, "Password must contain at least one uppercase letter."
-        if not re.search(r'\d', password): return False, "Password must contain at least one digit."
-
         special_characters = r'~!@#$%&_\-+=`|\(\){}\[\]:;\'<>,\.?/'
-        if not re.search(f"[{re.escape(special_characters)}]", password): return False, "Password must contain at least one special character."
-        if not re.match(r'^[a-zA-Z0-9' + re.escape(special_characters) + ']+$', password): return False, "Password contains invalid characters."
-        return True, "Password is valid."
+        if(11 < len(password) < 31): # password at least 12 characters and no longer than 30
+            if(re.search(r'[a-z]', password)): # Password must contain at least one lowercase letter
+                if(re.search(r'[A-Z]', password)): # Password must contain at least one uppercase letter
+                    if(re.search(r'\d', password)): # Password must contain at least one digit
+                        if(re.search(f"[{re.escape(special_characters)}]", password)): # Password must contain at least one special character
+                            if(re.match(r'^[a-zA-Z0-9' + re.escape(special_characters) + ']+$', password)): # Password does not contains invalid characters
+                                return True
+        return False
 
     def Is_Valid_AccountType(type):
         if isinstance(LoggedInAccount.CurrentLoggedInAccount, Account):
             AccountTypeList = ['member', 'consultant', 'admin']
-            if LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "admin": AccountTypeList.remove("admin")
-            # elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "consultant": AccountTypeList.remove("consultant")
+            if LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "admin": 
+                AccountTypeList.remove("admin")
+            elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "consultant": 
+                AccountTypeList.remove("admin")
+                AccountTypeList.remove("consultant")
 
-            result = type.lower() in AccountTypeList
-            return result, ("Valid type." if result == True else "Invalid type.")
-        else: 
-            return False, "Invalid logged in account."
+            if(type.lower() in AccountTypeList):
+                return True
+        return False
+ 
+#     def input_with_validation(prompt, validation_func, requirement):
+#             while True:
+#                 print("What is the users "+prompt+"? "+requirement)
+#                 value = input("> ")
+#                 result = validation_func(value)
+#                 if result[0]:
+#                     return value
+#                 else:
+#                     print(result[1])
+#                     print()
+
+#     def Is_Valid_FirstName(firstname):
+#         result = firstname.isalpha()
+#         return result, ("Valid name" if result == True else "Invalid first name input.")
+    
+#     def Is_Valid_LastName(lastname):
+#         result = lastname.isalpha()
+#         return result, ("Valid name" if result == True else "Invalid last name input.")
+    
+#     def Is_Valid_age(age):
+#         result = (isinstance(age, int) or age.isdigit()) and 0 < int(age) < 150
+#         return result, ("Valid age" if result == True else "Invalid age")
+    
+#     def Is_Valid_gender(gender):
+#         result = gender.lower() in ['male', 'female', 'other']
+#         return result, ("Valid gender" if result == True else "Invalid gender")
+    
+#     def Is_Valid_weight(weight):
+#         result = weight.replace('.', '', 1).isdigit() and 0 < float(weight) < 1000
+#         return result, ("Valid weight" if result == True else "Invalid weight")
+    
+#     def Is_Valid_Address(address):
+#         pattern = re.compile(r'^[A-Za-z\s]+ \d+[a-zA-Z]? \d{4}[A-Z]{2}$')
+#         result = bool(pattern.match(address))
+#         return result, ("Valid address" if result else "Invalid address")
+    
+#     def Is_Valid_City(city):
+#         words = city.split()
+#         result = all(word.isalpha() for word in words)
+#         return result, ("Valid city" if result else "Invalid city")
+    
+#     def Is_Valid_email(email):
+#         result = re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
+#         return result, ("Valid Email" if result == True else "Invalid Email")
+    
+#     def Is_Valid_phone(phone):
+#         result = re.match(r"6-\d{8}$", phone) is not None or re.match(r"6\d{8}$", phone) is not None, "Invalid phone number."
+#         return result, ("Valid phone number" if result == True else "Invalid phone number")
+
+#     def Is_Valid_Username(username):
+#         connection = sqlite3.connect(Members.SourceDB)
+#         cursor = connection.cursor()
+#         try:
+#             cursor.execute("SELECT Username FROM Members")
+#             ExistingUsernames = cursor.fetchall()
+#         except:
+#             ExistingUsernames = ""
+#         connection.close()
+
+#         username = username.lower()
+        
+#         if len(username) < 8: return False, "Username must be at least 8 characters long."
+#         if len(username) > 10: return False, "Username must be no longer than 10 characters."
+#         if not re.match(r'^[a-z_]', username): False, "Username must start with a letter or underscore."
+#         if not re.match(r'^[a-z0-9_\'\.]+$', username): return False, "Username can only contain letters, numbers, underscores, apostrophes, and periods."
+#         if username in ExistingUsernames: return False, "Username already exists."
+#         return True, "Username is valid."
+    
+#     def Is_Valid_Password(password):
+#         if len(password) < 12: return False, "Password must be at least 12 characters long."
+#         if len(password) > 30: return False, "Password must be no longer than 30 characters."
+#         if not re.search(r'[a-z]', password): return False, "Password must contain at least one lowercase letter."
+#         if not re.search(r'[A-Z]', password): return False, "Password must contain at least one uppercase letter."
+#         if not re.search(r'\d', password): return False, "Password must contain at least one digit."
+
+#         special_characters = r'~!@#$%&_\-+=`|\(\){}\[\]:;\'<>,\.?/'
+#         if not re.search(f"[{re.escape(special_characters)}]", password): return False, "Password must contain at least one special character."
+#         if not re.match(r'^[a-zA-Z0-9' + re.escape(special_characters) + ']+$', password): return False, "Password contains invalid characters."
+#         return True, "Password is valid."
+
+#     def Is_Valid_AccountType(type):
+#         if isinstance(LoggedInAccount.CurrentLoggedInAccount, Account):
+#             AccountTypeList = ['member', 'consultant', 'admin']
+#             if LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "admin": AccountTypeList.remove("admin")
+#             # elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "consultant": AccountTypeList.remove("consultant")
+
+#             result = type.lower() in AccountTypeList
+#             return result, ("Valid type." if result == True else "Invalid type.")
+#         else: 
+#             return False, "Invalid logged in account."
     
     def CreateAccountInput():
         if not isinstance(LoggedInAccount.CurrentLoggedInAccount, Account): return

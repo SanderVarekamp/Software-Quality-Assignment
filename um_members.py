@@ -9,7 +9,13 @@ from Encrypt import *
 class main:
 
     def start():
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        print("WIP")
+        test = 9
+        if(0 < test < 10):
+            print("yes")
+        else:
+            print("no")
+        # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         # Members.DeleteOldestBackups("Backups")
         # Database.AddAllTables()
         # # main.hardcodeSuperAdmin()   
