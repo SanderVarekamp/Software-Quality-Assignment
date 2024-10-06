@@ -50,6 +50,29 @@ class Database:
       connection.commit()
       connection.close()
 
+    def SelectFromDatabase(query, fetchAll, input = None):
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        try:
+            connection = sqlite3.connect(Members.SourceDB)
+            cursor = connection.cursor()
+            try:
+                FullQuery = "SELECT "+query
+                if(input is None):
+                    cursor.execute(FullQuery)
+                else:
+                    cursor.execute(FullQuery, input)
+                if(fetchAll):
+                    result = cursor.fetchall()
+                else:
+                    result = cursor.fetchone()
+            except:
+                result = ""
+            connection.close()
+            return result
+        except:
+            None
+        Encrypt(Members.SourceDB, Members.HardCodePassword)
+
     def LogAction(username: str, activity: str, info: str, sus: bool):
         max_retries = 5
         retry_delay = 0.1

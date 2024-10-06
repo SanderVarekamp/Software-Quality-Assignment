@@ -9,18 +9,13 @@ from Encrypt import *
 class main:
 
     def start():
-        print("WIP")
-        test = 9
-        if(0 < test < 10):
-            print("yes")
-        else:
-            print("no")
-        # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        # Encrypt(Members.SourceDB, Members.HardCodePassword)
         # Members.DeleteOldestBackups("Backups")
-        # Database.AddAllTables()
-        # # main.hardcodeSuperAdmin()   
-        # # main.hardcodeConsultant()  
-        # main.menu()
+        Database.AddAllTables()
+        # main.hardcodeSuperAdmin()   
+        # main.hardcodeConsultant()  
+        # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        main.menu()
 
     def menu():   
         while True:     
@@ -35,7 +30,7 @@ class main:
                 os.system('cls')
                 if choice == "1":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Going to log in.",False)
-                    LoggedInAccount.LogInInput()
+                    AccountManager.LogInInput()
                     if bcrypt.checkpw(AccountManager.TempPasswordForReset.encode("utf-8"),bcrypt.gensalt()):
                         AccountManager.ResetPasswordInput(LoggedInAccount.CurrentLoggedInAccount)
             elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "superadmin" or LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "admin":
@@ -59,9 +54,11 @@ class main:
                 elif choice == "2":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Printing account information.",False)
                     LoggedInAccount.CurrentLoggedInAccount.Print()
+                    input()
                 elif choice == "3":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Looking at all user information",False)
                     Members.PrintMembers()
+                    input()
                 elif choice == "4":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Searching for user",False)
                     AccountManager.ChangeAccount(LoggedInAccount.CurrentLoggedInAccount)
