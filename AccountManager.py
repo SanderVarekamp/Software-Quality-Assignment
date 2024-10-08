@@ -303,6 +303,55 @@ class AccountManager:
             print("No account found")
             return None
         
+    def SearchAccountForce(query):
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        connection = sqlite3.connect(Members.SourceDB)
+        cursor = connection.cursor()
+        search_pattern = f"%{query}%"
+  
+        base_query = """SELECT * FROM Members WHERE 
+                        (Username LIKE ? OR
+                        PasswordHash LIKE ? OR
+                        FirstName LIKE ? OR
+                        LastName LIKE ? OR
+                        Age LIKE ? OR
+                        Gender LIKE ? OR
+                        Weight LIKE ? OR
+                        Address LIKE ? OR
+                        City LIKE ? OR
+                        Email LIKE ? OR
+                        PhoneNumber LIKE ? OR
+                        Type LIKE ? OR
+                        RegistrationDate LIKE ? OR
+                        MemberID LIKE ?)"""
+        cursor.execute(base_query, (search_pattern, search_pattern, search_pattern, search_pattern, search_pattern,
+                                    search_pattern, search_pattern, search_pattern, search_pattern, search_pattern,
+                                    search_pattern, search_pattern, search_pattern, search_pattern))
+        row = cursor.fetchone()
+        connection.close()
+        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        if row:
+            account = Account(
+                Username=row[0],
+                PasswordHash=row[1],
+                FirstName=row[2],
+                LastName=row[3],
+                Age=row[4],
+                Gender=row[5],
+                Weight=row[6],
+                Address=row[7],
+                City=row[8],
+                Email=row[9],
+                PhoneNumb=row[10],
+                Type=row[11]
+            )
+            account.RegistrationDate = row[12]
+            account.MemberID = row[13]
+            return account
+        else:
+            print("No account found")
+            return None
+        
     def DeleteAccount(account):
         Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         if not isinstance(account, Account):

@@ -77,11 +77,9 @@ class main:
                 elif choice == "7":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Restoring backup.",False)
                     Members.RestoreBackup()
-                    Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-                    if AccountManager.SearchAccount(LoggedInAccount.CurrentLoggedInAccount.Username) == None or AccountManager.SearchAccount(LoggedInAccount.CurrentLoggedInAccount) != LoggedInAccount.CurrentLoggedInAccount:
+                    if AccountManager.SearchAccountForce(LoggedInAccount.CurrentLoggedInAccount.Username).Username != LoggedInAccount.CurrentLoggedInAccount.Username:
                         print("Account not found, logging out")
                         LoggedInAccount.LogOut()
-                    Encrypt(Members.SourceDB, Members.HardCodePassword)
                 elif choice == "8":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Changing password",False)
                     AccountManager.ChangePasswordInput()
