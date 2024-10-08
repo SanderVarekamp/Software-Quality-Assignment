@@ -376,9 +376,11 @@ class AccountManager:
                 elif LoggedinAccount.Type.lower() == "consultant":
                     AccountManager.ChoiceConsultant(member, LoggedinAccount, loop)
             else:
-                print("No account found")
                 print("Press Enter to continue")
                 input()
+        else:
+            print("Press Enter to continue")
+            input()
     
     def ChoiceAdmin(member, LoggedinAccount, loop):
         while loop:
@@ -453,6 +455,8 @@ class AccountManager:
         else:
             timedif = AccountManager.UnblockTime - datetime.now()
             message = "Too many failed attempts. try again in "+str(timedif).split(".")[0]+" seconds."   
+            result = False
+            return result, message
         
         result = False
         if (message is None):
