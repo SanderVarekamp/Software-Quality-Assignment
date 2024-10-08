@@ -9,9 +9,12 @@ from Encrypt import *
 class main:
 
     def start():
-        Members.DeleteOldestBackups("Backups")
+        # Encrypt(Members.SourceDB, Members.HardCodePassword)
+        # Members.DeleteOldestBackups("Backups")
         Database.AddAllTables()
-        # main.hardcodeAdminAcc()     
+        # main.hardcodeSuperAdmin()   
+        # main.hardcodeConsultant()  
+        # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         main.menu()
 
     def menu():   
@@ -27,7 +30,7 @@ class main:
                 os.system('cls')
                 if choice == "1":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Going to log in.",False)
-                    LoggedInAccount.LogInInput()
+                    AccountManager.LogInInput()
                     if bcrypt.checkpw(AccountManager.TempPasswordForReset.encode("utf-8"),bcrypt.gensalt()):
                         AccountManager.ResetPasswordInput(LoggedInAccount.CurrentLoggedInAccount)
             elif LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "superadmin" or LoggedInAccount.CurrentLoggedInAccount.Type.lower() == "admin":
@@ -51,9 +54,11 @@ class main:
                 elif choice == "2":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Printing account information.",False)
                     LoggedInAccount.CurrentLoggedInAccount.Print()
+                    input()
                 elif choice == "3":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Looking at all user information",False)
                     Members.PrintMembers()
+                    input()
                 elif choice == "4":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Searching for user",False)
                     AccountManager.ChangeAccount(LoggedInAccount.CurrentLoggedInAccount)
@@ -72,6 +77,11 @@ class main:
                 elif choice == "7":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Restoring backup.",False)
                     Members.RestoreBackup()
+                    Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+                    if AccountManager.SearchAccount(LoggedInAccount.CurrentLoggedInAccount.Username) == None or AccountManager.SearchAccount(LoggedInAccount.CurrentLoggedInAccount) != LoggedInAccount.CurrentLoggedInAccount:
+                        print("Account not found, logging out")
+                        LoggedInAccount.LogOut()
+                    Encrypt(Members.SourceDB, Members.HardCodePassword)
                 elif choice == "8":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Changing password",False)
                     AccountManager.ChangePasswordInput()
@@ -118,13 +128,35 @@ class main:
                 
 
         
-    def hardcodeAdminAcc():
+    def hardcodeSuperAdmin():
         Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
                        ("super_admin", bcrypt.hashpw("Admin_123?".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
                         "admin", "admin", "admin@hr.nl", "0107944000", "SuperAdmin", str(date.today().strftime("%d/%m/%Y")), 1)) # from datetime import date
+        connection.commit()
+        connection.close()
+        Encrypt(Members.SourceDB, Members.HardCodePassword)
+
+    def hardcodeAdmin():
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        connection = sqlite3.connect(Members.SourceDB)
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                       ("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
+                        "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)) # from datetime import date
+        connection.commit()
+        connection.close()
+        Encrypt(Members.SourceDB, Members.HardCodePassword)
+
+    def hardcodeConsultant():
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        connection = sqlite3.connect(Members.SourceDB)
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                       ("consultant", bcrypt.hashpw("consultant".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
+                        "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)) # from datetime import date
         connection.commit()
         connection.close()
         Encrypt(Members.SourceDB, Members.HardCodePassword)
