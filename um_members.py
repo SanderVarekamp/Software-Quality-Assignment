@@ -11,11 +11,12 @@ class main:
     def start():
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
         # Members.DeleteOldestBackups("Backups")
-        Database.AddAllTables()
+        #Database.AddAllTables()
+
         # main.hardcodeSuperAdmin()   
         # main.hardcodeConsultant()  
-        # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-        main.menu()
+        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        #main.menu()
 
     def menu():   
         while True:     

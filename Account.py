@@ -4,6 +4,9 @@ import sqlite3
 from Database import Members
 #from Database import Members
 from Encrypt import Decrypt, Encrypt
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from binascii import hexlify, unhexlify
 
 class Account:
     def __init__(self, Username, PasswordHash, FirstName, LastName, Age, Gender, Weight, Address, City, Email, PhoneNumb, Type = "Member"):
@@ -65,3 +68,14 @@ class Account:
         print("Account Type:",self.Type)
         print("Registration date: ", self.RegistrationDate)
         print("Member ID", self.MemberID)
+
+    def Encrypt(self, public_key) -> list:
+        encrypted_data = []
+        words = [self.Username, self.FirstName, self.LastName, str(self.Age), self.Gender, str(self.Weight), self.Address, self.City, self.Email, self.PhoneNumb, self.Type, self.RegistrationDate, str(self.MemberID)]
+        for word in words:
+            data_to_encrypt = word.encode('utf-8')  
+            cipher_rsa = PKCS1_OAEP.new(public_key)
+            encrypted = cipher_rsa.encrypt(data_to_encrypt)
+            encrypted_data.append(hexlify(encrypted))
+        return encrypted_data
+    
