@@ -1,20 +1,23 @@
 import sqlite3
 from datetime import *
-from Account import *
 import pandas as pd
 import os
 import re
 import glob
 from Encrypt import *
+from Encrypt2 import *
+from Logs import Logs
 
 class Database:
     def AddAllTables():
+        from Database import Members  # Lazy import
         Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         Database.AddTableMembers()
         Database.AddTableLog()
         Encrypt(Members.SourceDB, Members.HardCodePassword)
 
     def AddTableMembers():
+        from Database import Members  # Lazy import
         connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS Members (
@@ -37,9 +40,10 @@ class Database:
         connection.close()
 
     def AddTableLog():
-      connection = sqlite3.connect(Members.SourceDB)
-      cursor = connection.cursor()
-      cursor.execute("""CREATE TABLE IF NOT EXISTS ActivityLog (
+        from Database import Members
+        connection = sqlite3.connect(Members.SourceDB)
+        cursor = connection.cursor()
+        cursor.execute("""CREATE TABLE IF NOT EXISTS ActivityLog (
                             Date TEXT, 
                             Time TEXT, 
                             Username TEXT, 
@@ -47,54 +51,18 @@ class Database:
                             Information TEXT, 
                             Suspicious TEXT 
                           )""")
-      connection.commit()
-      connection.close()
-
-    def SelectFromDatabase(query, fetchAll, input = None):
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-        try:
-            connection = sqlite3.connect(Members.SourceDB)
-            cursor = connection.cursor()
-            try:
-                FullQuery = "SELECT "+query
-                if(input is None):
-                    cursor.execute(FullQuery)
-                else:
-                    cursor.execute(FullQuery, input)
-                if(fetchAll):
-                    result = cursor.fetchall()
-                else:
-                    result = cursor.fetchone()
-            except:
-                result = ""
-            connection.close()
-            return result
-        except:
-            None
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        connection.commit()
+        connection.close()
 
     def LogAction(username: str, activity: str, info: str, sus: bool):
+        from Encrypt2 import EncryptNew  # Lazy import
         max_retries = 5
         retry_delay = 0.1
         timeout = 30
-
         for attempt in range(max_retries):
             try:
-                Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-                now = datetime.now()
-                time_str = now.strftime("%H:%M:%S")
-                date_str = now.strftime("%d/%m/%Y")
-
-                connection = sqlite3.connect(Members.SourceDB, timeout=timeout)
-                connection.execute("PRAGMA journal_mode=WAL")
-                cursor = connection.cursor()
-                
-
-                cursor.execute("INSERT INTO ActivityLog VALUES (?, ?, ?, ?, ?, ?)", 
-                               (str(date_str), str(time_str), username, activity, info, sus))
-                connection.commit()
-                connection.close()
-                Encrypt(Members.SourceDB, Members.HardCodePassword)
+                system = EncryptNew()
+                system.encrypt_log(Logs(username, activity, info, sus))
                 break 
             except sqlite3.OperationalError as e:
                 if 'database is locked' in str(e):
@@ -106,18 +74,11 @@ class Database:
                         raise
                 else:
                     raise
-            finally:
-                try:
-                    connection.close()
-                except Exception as close_err:
-                    print(f"Error closing the database connection: {close_err}")
 
     def PrintLogs():
-      Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-      conn = sqlite3.connect(Members.SourceDB)
-      print (pd.read_sql_query("SELECT * FROM ActivityLog", conn))
-      conn.close()
-      Encrypt(Members.SourceDB, Members.HardCodePassword)
+        from Encrypt2 import decrypt_log  # Lazy import
+        logs = decrypt_log("test.db")
+        print(logs)
 
 class Members:
     SourceDB = "DataBase.db"

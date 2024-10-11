@@ -5,6 +5,7 @@ import bcrypt
 from Account import *
 from LoggedInAccount import *
 from Database import Members
+from Encrypt2 import *
 class AccountManager:
     
     FailedLogInCounter = 0
@@ -491,10 +492,13 @@ class AccountManager:
         if AccountManager.UnblockTime <= datetime.now():
             if isinstance(Username, str) and isinstance(Password, str): 
                 # if AccountManager.UsernameCheck(Username) and AccountManager.Is_Valid_Password(Password): 
-                rows = Database.SelectFromDatabase("* FROM Members WHERE Username = ?", False, (Username,))
-                if(rows is not None and bcrypt.checkpw(Password.encode("utf-8"),rows[1])):    
-                    account = Account(rows[0], rows[1], rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], rows[8], rows[9], rows[10], rows[11])
-                    LoggedInAccount.CurrentLoggedInAccount = account
+                members = EncryptNew().decrypt_members("test.db", None)
+                rows = EncryptNew().SelectFromDatabase(members, lambda x: x.Username == "super_admin", False)
+                print(rows)
+                #print(bcrypt.checkpw(Password.encode("utf-8"),rows[1]))
+                if(rows is not None and bcrypt.checkpw(Password.encode("utf-8"),rows.PasswordHash)):    
+                #account = Account(rows[0], rows[1], rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], rows[8], rows[9], rows[10], rows[11])
+                    LoggedInAccount.CurrentLoggedInAccount = rows
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount is not None else None, "Logging in.", "Logged in.", False)
                     result = True
                     message = "Logged in."

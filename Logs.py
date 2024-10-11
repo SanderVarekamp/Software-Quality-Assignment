@@ -17,8 +17,11 @@ class Logs:
         encrypted_data = []
         words = [self.date, self.time, self.username, self.activity, self.info, str(self.suspicious)]
         for word in words:
-            data_to_encrypt = word.encode('utf-8')  
-            cipher_rsa = PKCS1_OAEP.new(public_key)
-            encrypted = cipher_rsa.encrypt(data_to_encrypt)
-            encrypted_data.append(hexlify(encrypted))
+            try:
+                data_to_encrypt = word.encode('utf-8')  
+                cipher_rsa = PKCS1_OAEP.new(public_key)
+                encrypted = cipher_rsa.encrypt(data_to_encrypt)
+                encrypted_data.append(hexlify(encrypted))
+            except:
+                pass
         return encrypted_data

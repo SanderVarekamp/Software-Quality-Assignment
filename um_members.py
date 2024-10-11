@@ -15,8 +15,8 @@ class main:
 
         # main.hardcodeSuperAdmin()   
         # main.hardcodeConsultant()  
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-        #main.menu()
+        #Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        main.menu()
 
     def menu():   
         while True:     
@@ -30,7 +30,7 @@ class main:
                 choice = input("> ")
                 os.system('cls')
                 if choice == "1":
-                    Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Going to log in.",False)
+                    #Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Going to log in.",False)
                     AccountManager.LogInInput()
                     if bcrypt.checkpw(AccountManager.TempPasswordForReset.encode("utf-8"),bcrypt.gensalt()):
                         AccountManager.ResetPasswordInput(LoggedInAccount.CurrentLoggedInAccount)

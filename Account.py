@@ -67,7 +67,7 @@ class Account:
         print("Phone Number:",self.PhoneNumb)
         print("Account Type:",self.Type)
         print("Registration date: ", self.RegistrationDate)
-        print("Member ID", self.MemberID)
+        print("Member ID:", self.MemberID)
 
     def Encrypt(self, public_key) -> list:
         encrypted_data = []
