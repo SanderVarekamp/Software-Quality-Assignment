@@ -74,8 +74,8 @@ class Database:
                     raise
 
     def PrintLogs():
-        from Encrypt2 import decrypt_log  # Lazy import
-        logs = decrypt_log("test.db")
+        from Encrypt2 import EncryptNew  # Lazy import
+        logs = EncryptNew().decrypt_log("DataBase.db")
         print(logs)
 
     def SelectFromDatabase(query, fetchAll, input = None):
@@ -99,15 +99,15 @@ class Database:
             return result
         except:
             None
-        EncryptNew.DeleteDecrypted()
+        EncryptNew().DeleteDecrypted()
 
 class Members:
     SourceDB = "DataBase.db"
-    EncryptedDB = "DataBase.db.enc"
+    #EncryptedDB = "DataBase.db.enc"
     BackupDB = "DataBase_Backup.db"
     HardCodePassword = "VeryGoodPassWord"
     def UpdateBackUp():
-        EncryptNew().Createbackup(Members.SourceDB, Members.BackupDB)
+        EncryptBackup(Members.SourceDB, Members.HardCodePassword)
     
     def DeleteOldestBackups(directory, MaxBackups = 10):
         while True:
@@ -193,17 +193,19 @@ class Members:
             if name == None:
                 print("No file found, try again")
 
+        # encrypted_file_path = "Backups/" + name
+        # EncryptNew().RestoreBackup(encrypted_file_path, Members.SourceDB)
         encrypted_file_path = "Backups/" + name
-        EncryptNew().RestoreBackup(encrypted_file_path, Members.SourceDB)
+        Decrypt(encrypted_file_path, Members.HardCodePassword, Members.SourceDB)
         print("Backup restored")
 
     def PrintMembers():
-        EncryptNew.DecryptAll("Members")
+        EncryptNew().DecryptAll("Members")
         conn = sqlite3.connect(Members.SourceDB)
         cur = conn.cursor()
         try:
-            print (pd.read_sql_query("SELECT Username, FirstName, LastName, Age, Gender, Weight, Address, City, Email, PhoneNumber, Type,RegistrationDate, MemberID FROM Members", conn))
+            print (pd.read_sql_query("SELECT Username, FirstName, LastName, Age, Gender, Weight, Address, City, Email, PhoneNumber, Type,RegistrationDate, MemberID FROM Decrypted", conn))
         except:
             print("No Data found")
         conn.close()
-        EncryptNew.DeleteDecrypted()
+        EncryptNew().DeleteDecrypted()

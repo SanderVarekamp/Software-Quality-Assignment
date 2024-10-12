@@ -33,6 +33,8 @@ class Account:
             self.MemberID = MemberID
 
     def GenerateMemberID(self):
+        print(self.RegistrationDate)
+        input()
         Numb0 = int(str(self.RegistrationDate)[8])
         Numb1 = int(str(self.RegistrationDate)[9])
         random_digits = [random.randint(0, 9) for _ in range(7)]
@@ -80,6 +82,10 @@ class Account:
 
     def Encrypt(self, public_key) -> list:
         encrypted_data = []
+        if self.RegistrationDate == None:
+            self.RegistrationDate = date.today().strftime("%d/%m/%Y")
+        if self.MemberID == None:
+            self.MemberID = self.GenerateMemberID()
         words = [self.Username, self.PasswordHash, self.FirstName, self.LastName, str(self.Age), self.Gender, str(self.Weight), self.Address, self.City, self.Email, self.PhoneNumb, self.Type, self.RegistrationDate, str(self.MemberID)]
         for word in words:
             if word == self.PasswordHash:

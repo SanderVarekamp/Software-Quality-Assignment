@@ -252,7 +252,7 @@ class AccountManager:
 
 
     def SearchAccount(query, currentuser):
-        EncryptNew.DecryptAll("Members")
+        EncryptNew().DecryptAll("Members")
         connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         search_pattern = f"%{query}%"
@@ -286,6 +286,9 @@ class AccountManager:
         connection.close()
         EncryptNew().DeleteDecrypted()
         if row:
+            print(row[1])
+            print(row[0])
+            print(row[2])
             account = Account(
                 Username=row[0],
                 PasswordHash=row[1],
@@ -333,7 +336,7 @@ class AccountManager:
                                     search_pattern, search_pattern, search_pattern, search_pattern))
         row = cursor.fetchone()
         connection.close()
-        EncryptNew.DeleteDecrypted()
+        EncryptNew().DeleteDecrypted()
         if row:
             account = Account(
                 Username=row[0],
@@ -358,7 +361,7 @@ class AccountManager:
         
     def DeleteAccount(account):
         # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-        EncryptNew.DecryptAll("Members")
+        EncryptNew().DecryptAll("Members")
         if not isinstance(account, Account):
             raise ValueError("Expected an Account instance")
         try:

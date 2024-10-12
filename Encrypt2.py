@@ -164,9 +164,7 @@ class EncryptNew:
         cursor = connection.cursor()  
         system = EncryptNew()  
         if thing == "Members":
-            print("Decrypting members...")	
             items =  system.decrypt_members("DataBase.db", None)
-            print("Creating table...")
             cursor.execute("""CREATE TABLE IF NOT EXISTS Decrypted (
             Username TEXT,
             PasswordHash TEXT,
@@ -202,7 +200,6 @@ class EncryptNew:
                 cursor.execute('INSERT INTO Decrypted VALUES (?, ?, ?, ?, ?, ?)', (log.Date, log.Time, log.Username, log.Activity, log.Info, log.Suspicious))
         else:
             return None  
-        print("Decryption complete.")
         connection.commit()  
 
     def ChangeTable(self, table):
@@ -247,8 +244,3 @@ class EncryptNew:
         except Exception as e:
             print(f"An error occurred while restoring the database: {e}")
         return destination_db
-    
-if __name__ == "__main__":
-    system = EncryptNew()
-    # system.encrypt_member("Database.db", )
-    system.DecryptAll("Members")
