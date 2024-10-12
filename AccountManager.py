@@ -501,7 +501,7 @@ class AccountManager:
                 # if AccountManager.UsernameCheck(Username) and AccountManager.Is_Valid_Password(Password): 
                 rows = Database.SelectFromDatabase("* FROM Decrypted WHERE Username = ?", False, (Username,))
                 if(rows is not None and bcrypt.checkpw(Password.encode("utf-8"),rows[1])):    
-                    account = Account(rows[0], rows[1], rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], rows[8], rows[9], rows[10], rows[11])
+                    account = Account(rows[0], rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], rows[8], rows[9], rows[10], rows[11], rows[12], rows[13])
                     LoggedInAccount.CurrentLoggedInAccount = account
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount is not None else None, "Logging in.", "Logged in.", False)
                     result = True
@@ -528,6 +528,7 @@ class AccountManager:
             AccountManager.FailedLogInCounter -= 1
             AccountManager.CurrentTimeCooldownSeconds *= 2
 
+        EncryptNew().DeleteDecrypted()
         return result, message
 
     def LogInInput():

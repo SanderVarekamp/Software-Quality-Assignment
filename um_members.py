@@ -115,6 +115,8 @@ class main:
                     LoggedInAccount.LogOut()
 
             else:
+                print("Welcome", LoggedInAccount.CurrentLoggedInAccount.Type)
+                print(LoggedInAccount.CurrentLoggedInAccount.Print())
                 print("1. Log out")
                 print()
                 print("Enter your choice: ")
@@ -135,7 +137,7 @@ class main:
         # connection.commit()
         # connection.close()
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
-        account = Account("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)
+        account = Account("super_admin", bcrypt.hashpw("Admin_123?".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "SuperAdmin", str(date.today().strftime("%d/%m/%Y")), 1)
         EncryptNew().encrypt_member(account)
 
     def hardcodeAdmin():
@@ -148,7 +150,8 @@ class main:
         # connection.commit()
         # connection.close()
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
-        EncryptNew().encrypt_member(Account("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1))
+        account = Account("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)
+        EncryptNew().encrypt_member(account)
 
     def hardcodeConsultant():
         # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
@@ -160,8 +163,8 @@ class main:
         # connection.commit()
         # connection.close()
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
-        EncryptNew().encrypt_member(Account("consultant", bcrypt.hashpw("consultant".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin"))
-   
+        account = Account("consultant", bcrypt.hashpw("consultant".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)
+        EncryptNew().encrypt_member(account)   
 
 if __name__ == '__main__':
     main.start()

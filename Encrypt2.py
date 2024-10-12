@@ -46,35 +46,65 @@ class EncryptNew:
                     )""")
         connection.commit()
         self.encrypted_data = user.Encrypt(self.public_key)
-        print(self.encrypted_data[0])
         cursor.execute('INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (self.encrypted_data[0], user.PasswordHash, self.encrypted_data[1], self.encrypted_data[2], self.encrypted_data[3], self.encrypted_data[4], self.encrypted_data[5], self.encrypted_data[6], self.encrypted_data[7], self.encrypted_data[8], self.encrypted_data[9], self.encrypted_data[10], self.encrypted_data[11], self.encrypted_data[12]))
         connection.commit()  
     
     def decrypt_members(self, db_path, given_name):
         from Account import Account
         all_members = []
-        connection = sqlite3.connect(db_path)
-        cursor = connection.cursor()
-        cursor.execute("SELECT * FROM Members")
-        rows = cursor.fetchall()
+        
+        # Use context manager to handle connection
+        with sqlite3.connect(db_path) as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM Members")
+            rows = cursor.fetchall()
+
+        # Set up RSA decryption
         cipher_rsa = PKCS1_OAEP.new(self.private_key)
+
+        # Loop through each row in the database result
         for row in rows:
             decrypted_data = []
+
+            # Loop through each field in the row
             for data in row:
                 try:
+                    # Try to unhexlify and decrypt the data
                     decrypted = cipher_rsa.decrypt(unhexlify(data))
                     word = decrypted.decode("utf-8")
                     decrypted_data.append(word)
-                except:
+                except (ValueError, TypeError, Exception) as e:
+                    # Catch specific exceptions and log/print errors
+                    # Append the data as is if it's not encrypted or decryption fails
                     decrypted_data.append(data)
-            account = Account(decrypted_data[0], decrypted_data[1], str(decrypted_data[2]), decrypted_data[3], str(decrypted_data[4]), decrypted_data[5], decrypted_data[6], decrypted_data[7], decrypted_data[8], decrypted_data[9], decrypted_data[10], decrypted_data[11], decrypted_data[12], decrypted_data[13])
-            account.RegistrationDate = (decrypted_data[12])
-            account.MemberID = str(decrypted_data[13])
+            # Create an Account object with decrypted data
+            account = Account(
+                decrypted_data[0],  # Username
+                decrypted_data[1],  # Password hash
+                decrypted_data[2],  # First name
+                decrypted_data[3],  # Last name
+                str(decrypted_data[4]),  # Age
+                decrypted_data[5],  # Gender
+                str(decrypted_data[6]),  # Weight
+                decrypted_data[7],  # Address
+                decrypted_data[8],  # City
+                decrypted_data[9],  # Email
+                decrypted_data[10],  # PhoneNumb
+                decrypted_data[11],  # Type
+                decrypted_data[12], # Registration date
+                decrypted_data[13]  # Member ID
+            )
+
+            account.RegistrationDate = decrypted_data[12]  # Correct date if necessary
+            account.MemberID = str(decrypted_data[13])     # Correct ID if necessary
+
+            # If a specific name is provided, return the account for that name
             if decrypted_data[0] == given_name and given_name is not None:
                 return account
             else:
                 all_members.append(account)
-        connection.close()
+        
+        # Return all members if no specific name was matched
         return all_members
         
     def encrypt_log(self, log):
@@ -134,32 +164,29 @@ class EncryptNew:
         cursor = connection.cursor()  
         system = EncryptNew()  
         if thing == "Members":
-            try:
-                print("Decrypting members...")	
-                items =  system.decrypt_members("DataBase.db", None)
-                print("Creating table...")
-                cursor.execute("""CREATE TABLE IF NOT EXISTS Decrypted (
-                Username TEXT,
-                PasswordHash TEXT,
-                FirstName TEXT, 
-                LastName TEXT, 
-                Age INTEGER, 
-                Gender TEXT, 
-                Weight INTEGER, 
-                Address TEXT, 
-                City TEXT, 
-                Email TEXT, 
-                PhoneNumber TEXT, 
-                Type TEXT,
-                RegistrationDate TEXT, 
-                MemberID INTEGER
-                )""")
-                connection.commit()
-                if items is not None:
-                    for user in items:
-                        cursor.execute('INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (user.Username, user.PasswordHash, user.FirstName, user.LastName, user.Age, user.Gender, user.Weight, user.Address, user.City, user.Email, user.PhoneNumb, user.Type, user.RegistrationDate, user.MemberID))
-            except:
-                print("An error occurred while decrypting the members.")
+            print("Decrypting members...")	
+            items =  system.decrypt_members("DataBase.db", None)
+            print("Creating table...")
+            cursor.execute("""CREATE TABLE IF NOT EXISTS Decrypted (
+            Username TEXT,
+            PasswordHash TEXT,
+            FirstName TEXT, 
+            LastName TEXT, 
+            Age INTEGER, 
+            Gender TEXT, 
+            Weight INTEGER, 
+            Address TEXT, 
+            City TEXT, 
+            Email TEXT, 
+            PhoneNumber TEXT, 
+            Type TEXT,
+            RegistrationDate TEXT, 
+            MemberID INTEGER
+            )""")
+            connection.commit()
+            if items is not None:
+                for user in items:
+                    cursor.execute('INSERT INTO Decrypted VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (user.Username, user.PasswordHash, user.FirstName, user.LastName, user.Age, user.Gender, user.Weight, user.Address, user.City, user.Email, user.PhoneNumb, user.Type, user.RegistrationDate, user.MemberID))
         elif thing == "Logs":
             items = self.decrypt_log("DataBase.db")
             cursor.execute("""CREATE TABLE IF NOT EXISTS Decrypted (
@@ -172,7 +199,7 @@ class EncryptNew:
                 )""")
             connection.commit()
             for log in items:
-                cursor.execute('INSERT INTO ActivityLog VALUES (?, ?, ?, ?, ?, ?)', (log.Date, log.Time, log.Username, log.Activity, log.Info, log.Suspicious))
+                cursor.execute('INSERT INTO Decrypted VALUES (?, ?, ?, ?, ?, ?)', (log.Date, log.Time, log.Username, log.Activity, log.Info, log.Suspicious))
         else:
             return None  
         print("Decryption complete.")
@@ -223,5 +250,5 @@ class EncryptNew:
     
 if __name__ == "__main__":
     system = EncryptNew()
-    system.encrypt_member("Database.db", )
+    # system.encrypt_member("Database.db", )
     system.DecryptAll("Members")
