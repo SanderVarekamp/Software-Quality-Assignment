@@ -225,26 +225,27 @@ class AccountManager:
                 connection.close()
                 EncryptNew().DeleteDecrypted()
                 return False, "Current password is incorrect"
-        Result, Message = AccountManager.Is_Valid_Password(NewPassword)
+        Result = AccountManager.Is_Valid_Password(NewPassword)
         if not Result:
             connection.close()
             EncryptNew().DeleteDecrypted()
-            return Result, Message 
+            return Result
         cursor.execute( "UPDATE Decrypted SET PasswordHash = ? WHERE Username = ?", (bcrypt.hashpw(NewPassword.encode("utf-8"),bcrypt.gensalt()), Acc.Username))
         connection.commit()
         connection.close()
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
         EncryptNew().ChangeTable("Members")
-        return True, "Changed Password"
+        return True
+
         
     def ChangePasswordInput():
         print("What is your current password?")
         CurrentPassword = input("> ")
         print("What will be your new password?")
         NewPassword = input("> ")
-        Result, Message = AccountManager.ChangePassword(NewPassword, LoggedInAccount.CurrentLoggedInAccount, CurrentPassword)
+        Result = AccountManager.ChangePassword(NewPassword, LoggedInAccount.CurrentLoggedInAccount, CurrentPassword)
         if not Result:
-            print(Message)
+            print("Changing password failed")
             print("Press Enter to continue")
             input()
         else:
