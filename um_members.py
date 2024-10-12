@@ -3,7 +3,6 @@ from AccountManager import AccountManager
 from Database import *
 import bcrypt
 from LoggedInAccount import *
-from Encrypt import *
 
 
 class main:
@@ -11,10 +10,9 @@ class main:
     def start():
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
         # Members.DeleteOldestBackups("Backups")
-        #Database.AddAllTables()
-
-        # main.hardcodeSuperAdmin()   
-        # main.hardcodeConsultant()  
+        Database.AddAllTables()
+        main.hardcodeSuperAdmin()  
+        main.hardcodeConsultant()  
         #Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         main.menu()
 
@@ -128,37 +126,41 @@ class main:
 
         
     def hardcodeSuperAdmin():
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-        connection = sqlite3.connect(Members.SourceDB)
-        cursor = connection.cursor()
-        cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                       ("super_admin", bcrypt.hashpw("Admin_123?".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
-                        "admin", "admin", "admin@hr.nl", "0107944000", "SuperAdmin", str(date.today().strftime("%d/%m/%Y")), 1)) # from datetime import date
-        connection.commit()
-        connection.close()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        # connection = sqlite3.connect(Members.SourceDB)
+        # cursor = connection.cursor()
+        # cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+        #                ("super_admin", bcrypt.hashpw("Admin_123?".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
+        #                 "admin", "admin", "admin@hr.nl", "0107944000", "SuperAdmin", str(date.today().strftime("%d/%m/%Y")), 1)) # from datetime import date
+        # connection.commit()
+        # connection.close()
+        # Encrypt(Members.SourceDB, Members.HardCodePassword)
+        account = Account("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)
+        EncryptNew().encrypt_member(account)
 
     def hardcodeAdmin():
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-        connection = sqlite3.connect(Members.SourceDB)
-        cursor = connection.cursor()
-        cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                       ("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
-                        "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)) # from datetime import date
-        connection.commit()
-        connection.close()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        # connection = sqlite3.connect(Members.SourceDB)
+        # cursor = connection.cursor()
+        # cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+        #                ("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
+        #                 "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)) # from datetime import date
+        # connection.commit()
+        # connection.close()
+        # Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().encrypt_member(Account("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1))
 
     def hardcodeConsultant():
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-        connection = sqlite3.connect(Members.SourceDB)
-        cursor = connection.cursor()
-        cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                       ("consultant", bcrypt.hashpw("consultant".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
-                        "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)) # from datetime import date
-        connection.commit()
-        connection.close()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        # connection = sqlite3.connect(Members.SourceDB)
+        # cursor = connection.cursor()
+        # cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+        #                ("consultant", bcrypt.hashpw("consultant".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", 
+        #                 "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)) # from datetime import date
+        # connection.commit()
+        # connection.close()
+        # Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().encrypt_member(Account("consultant", bcrypt.hashpw("consultant".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin"))
    
 
 if __name__ == '__main__':

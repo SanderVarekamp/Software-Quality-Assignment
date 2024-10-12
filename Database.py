@@ -11,10 +11,8 @@ from Logs import Logs
 class Database:
     def AddAllTables():
         from Database import Members  # Lazy import
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         Database.AddTableMembers()
         Database.AddTableLog()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
 
     def AddTableMembers():
         from Database import Members  # Lazy import
@@ -80,14 +78,36 @@ class Database:
         logs = decrypt_log("test.db")
         print(logs)
 
+    def SelectFromDatabase(query, fetchAll, input = None):
+        EncryptNew().DecryptAll("Members")
+        try:
+            connection = sqlite3.connect(Members.SourceDB)
+            cursor = connection.cursor()
+            try:
+                FullQuery = "SELECT "+query
+                if(input is None):
+                    cursor.execute(FullQuery)
+                else:
+                    cursor.execute(FullQuery, input)
+                if(fetchAll):
+                    result = cursor.fetchall()
+                else:
+                    result = cursor.fetchone()
+            except:
+                result = ""
+            connection.close()
+            return result
+        except:
+            None
+        EncryptNew.DeleteDecrypted()
+
 class Members:
     SourceDB = "DataBase.db"
     EncryptedDB = "DataBase.db.enc"
     BackupDB = "DataBase_Backup.db"
     HardCodePassword = "VeryGoodPassWord"
     def UpdateBackUp():
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-        EncryptBackup(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().Createbackup(Members.SourceDB, Members.BackupDB)
     
     def DeleteOldestBackups(directory, MaxBackups = 10):
         while True:
@@ -174,12 +194,11 @@ class Members:
                 print("No file found, try again")
 
         encrypted_file_path = "Backups/" + name
-        Decrypt(encrypted_file_path, Members.HardCodePassword, Members.SourceDB)
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().RestoreBackup(encrypted_file_path, Members.SourceDB)
         print("Backup restored")
 
     def PrintMembers():
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        EncryptNew.DecryptAll("Members")
         conn = sqlite3.connect(Members.SourceDB)
         cur = conn.cursor()
         try:
@@ -187,4 +206,4 @@ class Members:
         except:
             print("No Data found")
         conn.close()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew.DeleteDecrypted()
