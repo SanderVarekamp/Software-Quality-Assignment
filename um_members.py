@@ -115,8 +115,6 @@ class main:
                     LoggedInAccount.LogOut()
 
             else:
-                print("Welcome", LoggedInAccount.CurrentLoggedInAccount.Type)
-                print(LoggedInAccount.CurrentLoggedInAccount.Print())
                 print("1. Log out")
                 print()
                 print("Enter your choice: ")

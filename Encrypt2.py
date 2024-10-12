@@ -46,7 +46,7 @@ class EncryptNew:
                     )""")
         connection.commit()
         self.encrypted_data = user.Encrypt(self.public_key)
-        cursor.execute('INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (self.encrypted_data[0], user.PasswordHash, self.encrypted_data[1], self.encrypted_data[2], self.encrypted_data[3], self.encrypted_data[4], self.encrypted_data[5], self.encrypted_data[6], self.encrypted_data[7], self.encrypted_data[8], self.encrypted_data[9], self.encrypted_data[10], self.encrypted_data[11], self.encrypted_data[12]))
+        cursor.execute('INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (self.encrypted_data[0], self.encrypted_data[1], self.encrypted_data[2], self.encrypted_data[3], self.encrypted_data[4], self.encrypted_data[5], self.encrypted_data[6], self.encrypted_data[7], self.encrypted_data[8], self.encrypted_data[9], self.encrypted_data[10], self.encrypted_data[11], self.encrypted_data[12], self.encrypted_data[13]))
         connection.commit()  
     
     def decrypt_members(self, db_path, given_name):
@@ -205,8 +205,10 @@ class EncryptNew:
     def ChangeTable(self, table):
         connection = sqlite3.connect('DataBase.db')
         cursor = connection.cursor()
-        cursor.execute("DROP TABLE ?"), (table)
-        cursor.execute("ALTER TABLE Decrypted RENAME TO ?"), (table)
+        
+        cursor.execute(f"DROP TABLE IF EXISTS {table}")
+        cursor.execute(f"ALTER TABLE Decrypted RENAME TO {table}")
+        
         connection.commit()
         connection.close()
 

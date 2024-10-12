@@ -33,17 +33,13 @@ class Account:
             self.MemberID = MemberID
 
     def GenerateMemberID(self):
-        print(self.RegistrationDate)
-        input()
         Numb0 = int(str(self.RegistrationDate)[8])
         Numb1 = int(str(self.RegistrationDate)[9])
         random_digits = [random.randint(0, 9) for _ in range(7)]
         Numb9 = (Numb0 + Numb1 + sum(random_digits)) % 10
         randomNumb = int(f"{Numb0}{Numb1}{''.join(map(str, random_digits))}{Numb9}")
         #Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-        print("1")
         EncryptNew().DecryptAll("Members")
-        print("2")
         
         conn = None
         try:

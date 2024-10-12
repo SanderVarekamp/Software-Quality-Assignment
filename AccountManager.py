@@ -287,9 +287,6 @@ class AccountManager:
         connection.close()
         EncryptNew().DeleteDecrypted()
         if row:
-            print(row[1])
-            print(row[0])
-            print(row[2])
             account = Account(
                 Username=row[0],
                 PasswordHash=row[1],
@@ -505,13 +502,14 @@ class AccountManager:
                 # if AccountManager.UsernameCheck(Username) and AccountManager.Is_Valid_Password(Password): 
                 rows = Database.SelectFromDatabase("* FROM Decrypted WHERE Username = ?", False, (Username,))
                 if(rows is not None and bcrypt.checkpw(Password.encode("utf-8"),rows[1])):    
-                    account = Account(rows[0], rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], rows[8], rows[9], rows[10], rows[11], rows[12], rows[13])
+                    account = Account(rows[0], rows[1], rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], rows[8], rows[9], rows[10], rows[11], rows[12], rows[13])
                     LoggedInAccount.CurrentLoggedInAccount = account
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount is not None else None, "Logging in.", "Logged in.", False)
                     result = True
                     message = "Logged in."
                     AccountManager.FailedLogInCounter = 0
                     AccountManager.CurrentTimeCooldownSeconds = AccountManager.StandardTimeCooldownSeconds
+                    EncryptNew().DeleteDecrypted()
                     return result, message
         else:
             timedif = AccountManager.UnblockTime - datetime.now()
