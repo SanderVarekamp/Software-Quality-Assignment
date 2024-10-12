@@ -11,8 +11,9 @@ class main:
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
         # Members.DeleteOldestBackups("Backups")
         Database.AddAllTables()
-        main.hardcodeSuperAdmin()  
-        main.hardcodeConsultant()  
+        # main.hardcodeSuperAdmin() 
+        # main.hardcodeAdmin() 
+        # main.hardcodeConsultant()  
         #Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         main.menu()
 
@@ -148,7 +149,7 @@ class main:
         # connection.commit()
         # connection.close()
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
-        account = Account("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)
+        account = Account("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 3)
         EncryptNew().encrypt_member(account)
 
     def hardcodeConsultant():
@@ -161,7 +162,7 @@ class main:
         # connection.commit()
         # connection.close()
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
-        account = Account("consultant", bcrypt.hashpw("consultant".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 1)
+        account = Account("consultant", bcrypt.hashpw("consultant".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 2)
         EncryptNew().encrypt_member(account)   
 
 if __name__ == '__main__':

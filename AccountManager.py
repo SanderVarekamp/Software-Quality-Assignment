@@ -366,7 +366,7 @@ class AccountManager:
             connection = sqlite3.connect(Members.SourceDB)
             cursor = connection.cursor()
             try:
-                cursor.execute("DELETE FROM Members WHERE MemberID = ?", (account.MemberID,))
+                cursor.execute("DELETE FROM Decrypted WHERE MemberID = ?", (account.MemberID,))
                 connection.commit()
             except Exception as e:
                 print(f"An error occurred while deleting the account: {e}")
@@ -414,7 +414,7 @@ class AccountManager:
         EncryptNew().DecryptAll("Members")
         with sqlite3.connect(Members.SourceDB) as conn:
             cur = conn.cursor()
-            query = f"UPDATE Members SET {field} = ? WHERE MemberID = ?"
+            query = f"UPDATE Decrypted SET {field} = ? WHERE MemberID = ?"
             cur.execute(query, (new_value, MemberID))
             conn.commit()
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
