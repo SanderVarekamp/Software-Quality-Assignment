@@ -25,7 +25,7 @@ class EncryptNew:
             public_key = RSA.import_key(file.read())  
         return public_key
     
-    def encrypt_member(self, user):
+    def encrypt_user(self, user):
         connection = sqlite3.connect('DataBase.db')
         cursor = connection.cursor()    
         cursor.execute("""CREATE TABLE IF NOT EXISTS Members (
@@ -49,7 +49,7 @@ class EncryptNew:
         cursor.execute('INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (self.encrypted_data[0], self.encrypted_data[1], self.encrypted_data[2], self.encrypted_data[3], self.encrypted_data[4], self.encrypted_data[5], self.encrypted_data[6], self.encrypted_data[7], self.encrypted_data[8], self.encrypted_data[9], self.encrypted_data[10], self.encrypted_data[11], self.encrypted_data[12], self.encrypted_data[13]))
         connection.commit()  
     
-    def decrypt_members(self, db_path, given_name):
+    def decrypt_user(self, db_path, given_name):
         from Account import Account
         all_members = []
         
@@ -162,12 +162,12 @@ class EncryptNew:
             result = None
         return result
     
-    def DecryptAll(self, thing):
+    def DecryptAll(self, subject):
         connection = sqlite3.connect('DataBase.db')
         cursor = connection.cursor()  
         system = EncryptNew()  
-        if thing == "Members":
-            items =  system.decrypt_members("DataBase.db", None)
+        if subject == "Members":
+            items =  system.decrypt_user("DataBase.db", None)
             cursor.execute("""CREATE TABLE IF NOT EXISTS Decrypted (
             Username TEXT,
             PasswordHash TEXT,
@@ -188,7 +188,7 @@ class EncryptNew:
             if items is not None:
                 for user in items:
                     cursor.execute('INSERT INTO Decrypted VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (user.Username, user.PasswordHash, user.FirstName, user.LastName, user.Age, user.Gender, user.Weight, user.Address, user.City, user.Email, user.PhoneNumb, user.Type, user.RegistrationDate, user.MemberID))
-        elif thing == "Logs":
+        elif subject == "Logs":
             items = self.decrypt_log("DataBase.db")
             cursor.execute("""CREATE TABLE IF NOT EXISTS Decrypted (
                     Date TEXT, 

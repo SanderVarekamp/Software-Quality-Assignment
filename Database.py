@@ -4,8 +4,8 @@ import pandas as pd
 import os
 import re
 import glob
-from Encrypt import *
-from Encrypt2 import *
+from EncryptFiles import *
+from Encryption import *
 from Logs import Logs
 
 class Database:
@@ -53,7 +53,7 @@ class Database:
         connection.close()
 
     def LogAction(username: str, activity: str, info: str, sus: bool):
-        from Encrypt2 import EncryptNew  # Lazy import
+        from Encryption import EncryptNew  # Lazy import
         max_retries = 5
         retry_delay = 0.1
         timeout = 30
@@ -74,7 +74,7 @@ class Database:
                     raise
 
     def PrintLogs():
-        from Encrypt2 import EncryptNew  # Lazy import
+        from Encryption import EncryptNew  # Lazy import
         logs = EncryptNew().decrypt_log("DataBase.db")
         for log in logs:
             log.Print()
