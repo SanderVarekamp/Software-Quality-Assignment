@@ -5,7 +5,7 @@ import bcrypt
 from Account import *
 from LoggedInAccount import *
 from Database import Members
-from Encrypt2 import EncryptNew
+from Encrypt import EncryptNew
 class AccountManager:
     
     FailedLogInCounter = 0
@@ -198,7 +198,7 @@ class AccountManager:
         # connection.commit()
         # connection.close()
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
-        EncryptNew().encrypt_member(account)
+        EncryptNew().encrypt_user(account)
         return True, "AccountManager inserted into database."
     
     TempPasswordForReset = "TempPassword123!"

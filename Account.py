@@ -6,7 +6,7 @@ from Database import Members
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from binascii import hexlify, unhexlify
-from Encrypt2 import EncryptNew
+from Encrypt import EncryptNew
 
 class Account:
     def __init__(self, Username, PasswordHash, FirstName, LastName, Age, Gender, Weight, Address, City, Email, PhoneNumb, Type = "Member", RegistrationDate = None, MemberID = None):
