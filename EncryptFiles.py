@@ -91,25 +91,25 @@ class DBEncryptor:
         except:
             return
 
-    def read_db(self, db_file_path: str) -> None:
-        conn = sqlite3.connect(db_file_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tables = cursor.fetchall()
-        for table_name in tables:
-            table_name = table_name[0]
-            print(f"Table: {table_name}")
-            cursor.execute(f"PRAGMA table_info({table_name});")
-            columns = cursor.fetchall()
-            print("Columns:")
-            for column in columns:
-                print(f" - {column[1]} ({column[2]})")
-            cursor.execute(f"SELECT * FROM {table_name};")
-            rows = cursor.fetchall()
-            print("Rows:")
-            for row in rows:
-                print(row)
-        conn.close()
+#     def read_db(self, db_file_path: str) -> None:
+#         conn = sqlite3.connect(db_file_path)
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+#         tables = cursor.fetchall()
+#         for table_name in tables:
+#             table_name = table_name[0]
+#             print(f"Table: {table_name}")
+#             cursor.execute(f"PRAGMA table_info({table_name});")
+#             columns = cursor.fetchall()
+#             print("Columns:")
+#             for column in columns:
+#                 print(f" - {column[1]} ({column[2]})")
+#             cursor.execute(f"SELECT * FROM {table_name};")
+#             rows = cursor.fetchall()
+#             print("Rows:")
+#             for row in rows:
+#                 print(row)
+#         conn.close()
 
 def Encrypt(FilePathDB, Password):
     encryptor = DBEncryptor(Password)

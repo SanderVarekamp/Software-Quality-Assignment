@@ -5,6 +5,7 @@ import bcrypt
 from Account import *
 from LoggedInAccount import *
 from Database import Members
+from Encryption import EncryptNew
 class AccountManager:
     
     FailedLogInCounter = 0
@@ -188,15 +189,16 @@ class AccountManager:
 
     def InsertIntoDatabase(account):
         if not isinstance(account, Account): return False, "Given account is not of type AccountManager."
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword , Members.SourceDB)
-        connection = sqlite3.connect(Members.SourceDB)
-        cursor = connection.cursor()
-        cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                       (account.Username, account.PasswordHash, account.FirstName, account.LastName, account.Age, account.Gender, account.Weight, 
-                        account.Address, account.City, account.Email, account.PhoneNumb, account.Type, str(account.RegistrationDate), account.MemberID))
-        connection.commit()
-        connection.close()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        #Decrypt(Members.EncryptedDB, Members.HardCodePassword , Members.SourceDB)
+        # connection = sqlite3.connect(Members.SourceDB)
+        # cursor = connection.cursor()
+        # cursor.execute("INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+        #                (account.Username, account.PasswordHash, account.FirstName, account.LastName, account.Age, account.Gender, account.Weight, 
+        #                 account.Address, account.City, account.Email, account.PhoneNumb, account.Type, str(account.RegistrationDate), account.MemberID))
+        # connection.commit()
+        # connection.close()
+        # Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().encrypt_user(account)
         return True, "AccountManager inserted into database."
     
     TempPasswordForReset = "TempPassword123!"
@@ -212,35 +214,38 @@ class AccountManager:
         AccountManager.ChangePassword(AccountManager.TempPasswordForReset, Acc)
 
     def ChangePassword(NewPassword: str, Acc: Account, CurrentPassword: str = None) -> tuple[bool, str]:
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        EncryptNew().DecryptAll("Members")
         connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         if CurrentPassword != None:
-            cursor.execute("SELECT PasswordHash FROM Members WHERE Username = ?",(Acc.Username,))
+            cursor.execute("SELECT PasswordHash FROM Decrypted WHERE Username = ?",(Acc.Username,))
             PWHash = cursor.fetchone()[0]
             if not bcrypt.checkpw(CurrentPassword.encode("utf-8"),PWHash):
                 connection.close()
-                Encrypt(Members.SourceDB, Members.HardCodePassword)
+                EncryptNew().DeleteDecrypted()
                 return False, "Current password is incorrect"
-        Result, Message = AccountManager.Is_Valid_Password(NewPassword)
+        Result = AccountManager.Is_Valid_Password(NewPassword)
         if not Result:
             connection.close()
-            Encrypt(Members.SourceDB, Members.HardCodePassword)
-            return Result, Message 
-        cursor.execute( "UPDATE Members SET PasswordHash = ? WHERE Username = ?", (bcrypt.hashpw(NewPassword.encode("utf-8"),bcrypt.gensalt()), Acc.Username))
+            EncryptNew().DeleteDecrypted()
+            return Result
+        cursor.execute( "UPDATE Decrypted SET PasswordHash = ? WHERE Username = ?", (bcrypt.hashpw(NewPassword.encode("utf-8"),bcrypt.gensalt()), Acc.Username))
         connection.commit()
         connection.close()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
-        return True, "Changed Password"
+        # Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().ChangeTable("Members")
+        return True
+
         
     def ChangePasswordInput():
         print("What is your current password?")
         CurrentPassword = input("> ")
         print("What will be your new password?")
         NewPassword = input("> ")
-        Result, Message = AccountManager.ChangePassword(NewPassword, LoggedInAccount.CurrentLoggedInAccount, CurrentPassword)
+        Result = AccountManager.ChangePassword(NewPassword, LoggedInAccount.CurrentLoggedInAccount, CurrentPassword)
         if not Result:
-            print(Message)
+            print("Changing password failed")
             print("Press Enter to continue")
             input()
         else:
@@ -248,12 +253,12 @@ class AccountManager:
 
 
     def SearchAccount(query, currentuser):
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        EncryptNew().DecryptAll("Members")
         connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         search_pattern = f"%{query}%"
   
-        base_query = """SELECT * FROM Members WHERE 
+        base_query = """SELECT * FROM Decrypted WHERE 
                         (Username LIKE ? OR
                         PasswordHash LIKE ? OR
                         FirstName LIKE ? OR
@@ -280,7 +285,7 @@ class AccountManager:
                                     search_pattern, search_pattern, search_pattern, search_pattern))
         row = cursor.fetchone()
         connection.close()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().DeleteDecrypted()
         if row:
             account = Account(
                 Username=row[0],
@@ -304,12 +309,12 @@ class AccountManager:
             return None
         
     def SearchAccountForce(query):
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        EncryptNew().DecryptAll("Members")
         connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         search_pattern = f"%{query}%"
   
-        base_query = """SELECT * FROM Members WHERE 
+        base_query = """SELECT * FROM Decrypted WHERE 
                         (Username LIKE ? OR
                         PasswordHash LIKE ? OR
                         FirstName LIKE ? OR
@@ -329,7 +334,7 @@ class AccountManager:
                                     search_pattern, search_pattern, search_pattern, search_pattern))
         row = cursor.fetchone()
         connection.close()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().DeleteDecrypted()
         if row:
             account = Account(
                 Username=row[0],
@@ -353,14 +358,15 @@ class AccountManager:
             return None
         
     def DeleteAccount(account):
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        EncryptNew().DecryptAll("Members")
         if not isinstance(account, Account):
             raise ValueError("Expected an Account instance")
         try:
             connection = sqlite3.connect(Members.SourceDB)
             cursor = connection.cursor()
             try:
-                cursor.execute("DELETE FROM Members WHERE MemberID = ?", (account.MemberID,))
+                cursor.execute("DELETE FROM Decrypted WHERE MemberID = ?", (account.MemberID,))
                 connection.commit()
             except Exception as e:
                 print(f"An error occurred while deleting the account: {e}")
@@ -370,7 +376,7 @@ class AccountManager:
         finally:
             if connection:
                 connection.close()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().ChangeTable("Members")
 
 
     def EditAccount(account):
@@ -404,13 +410,15 @@ class AccountManager:
 
 
     def UpdateMemberData(MemberID, field, new_value):
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        EncryptNew().DecryptAll("Members")
         with sqlite3.connect(Members.SourceDB) as conn:
             cur = conn.cursor()
-            query = f"UPDATE Members SET {field} = ? WHERE MemberID = ?"
+            query = f"UPDATE Decrypted SET {field} = ? WHERE MemberID = ?"
             cur.execute(query, (new_value, MemberID))
             conn.commit()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        # Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().ChangeTable("Members")
 
     def ChangeAccount(LoggedinAccount):
         print("Enter account detail: ")
@@ -490,16 +498,18 @@ class AccountManager:
         
         if AccountManager.UnblockTime <= datetime.now():
             if isinstance(Username, str) and isinstance(Password, str): 
+                EncryptNew().DecryptAll("Members")
                 # if AccountManager.UsernameCheck(Username) and AccountManager.Is_Valid_Password(Password): 
-                rows = Database.SelectFromDatabase("* FROM Members WHERE Username = ?", False, (Username,))
+                rows = Database.SelectFromDatabase("* FROM Decrypted WHERE Username = ?", False, (Username,))
                 if(rows is not None and bcrypt.checkpw(Password.encode("utf-8"),rows[1])):    
-                    account = Account(rows[0], rows[1], rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], rows[8], rows[9], rows[10], rows[11])
+                    account = Account(rows[0], rows[1], rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], rows[8], rows[9], rows[10], rows[11], rows[12], rows[13])
                     LoggedInAccount.CurrentLoggedInAccount = account
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount is not None else None, "Logging in.", "Logged in.", False)
                     result = True
                     message = "Logged in."
                     AccountManager.FailedLogInCounter = 0
                     AccountManager.CurrentTimeCooldownSeconds = AccountManager.StandardTimeCooldownSeconds
+                    EncryptNew().DeleteDecrypted()
                     return result, message
         else:
             timedif = AccountManager.UnblockTime - datetime.now()
@@ -520,6 +530,7 @@ class AccountManager:
             AccountManager.FailedLogInCounter -= 1
             AccountManager.CurrentTimeCooldownSeconds *= 2
 
+        EncryptNew().DeleteDecrypted()
         return result, message
 
     def LogInInput():

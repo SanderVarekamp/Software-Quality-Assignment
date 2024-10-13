@@ -1,20 +1,21 @@
 import sqlite3
 from datetime import *
-from Account import *
 import pandas as pd
 import os
 import re
 import glob
-from Encrypt import *
+from EncryptFiles import *
+from Encryption import *
+from Logs import Logs
 
 class Database:
     def AddAllTables():
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        from Database import Members  # Lazy import
         Database.AddTableMembers()
         Database.AddTableLog()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
 
     def AddTableMembers():
+        from Database import Members  # Lazy import
         connection = sqlite3.connect(Members.SourceDB)
         cursor = connection.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS Members (
@@ -37,9 +38,10 @@ class Database:
         connection.close()
 
     def AddTableLog():
-      connection = sqlite3.connect(Members.SourceDB)
-      cursor = connection.cursor()
-      cursor.execute("""CREATE TABLE IF NOT EXISTS ActivityLog (
+        from Database import Members
+        connection = sqlite3.connect(Members.SourceDB)
+        cursor = connection.cursor()
+        cursor.execute("""CREATE TABLE IF NOT EXISTS ActivityLog (
                             Date TEXT, 
                             Time TEXT, 
                             Username TEXT, 
@@ -47,11 +49,38 @@ class Database:
                             Information TEXT, 
                             Suspicious TEXT 
                           )""")
-      connection.commit()
-      connection.close()
+        connection.commit()
+        connection.close()
+
+    def LogAction(username: str, activity: str, info: str, sus: bool):
+        from Encryption import EncryptNew  # Lazy import
+        max_retries = 5
+        retry_delay = 0.1
+        timeout = 30
+        for attempt in range(max_retries):
+            try:
+                system = EncryptNew()
+                system.encrypt_log(Logs(username, activity, info, sus))
+                break 
+            except sqlite3.OperationalError as e:
+                if 'database is locked' in str(e):
+                    if attempt < max_retries - 1:
+                        time.sleep(retry_delay)
+                        retry_delay *= 2
+                    else:
+                        print(f"Failed to log action after {max_retries} attempts due to a locked database.")
+                        raise
+                else:
+                    raise
+
+    def PrintLogs():
+        from Encryption import EncryptNew  # Lazy import
+        logs = EncryptNew().decrypt_log("DataBase.db")
+        for log in logs:
+            log.Print()
 
     def SelectFromDatabase(query, fetchAll, input = None):
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        EncryptNew().DecryptAll("Members")
         try:
             connection = sqlite3.connect(Members.SourceDB)
             cursor = connection.cursor()
@@ -71,61 +100,14 @@ class Database:
             return result
         except:
             None
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
-
-    def LogAction(username: str, activity: str, info: str, sus: bool):
-        max_retries = 5
-        retry_delay = 0.1
-        timeout = 30
-
-        for attempt in range(max_retries):
-            try:
-                Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-                now = datetime.now()
-                time_str = now.strftime("%H:%M:%S")
-                date_str = now.strftime("%d/%m/%Y")
-
-                connection = sqlite3.connect(Members.SourceDB, timeout=timeout)
-                connection.execute("PRAGMA journal_mode=WAL")
-                cursor = connection.cursor()
-                
-
-                cursor.execute("INSERT INTO ActivityLog VALUES (?, ?, ?, ?, ?, ?)", 
-                               (str(date_str), str(time_str), username, activity, info, sus))
-                connection.commit()
-                connection.close()
-                Encrypt(Members.SourceDB, Members.HardCodePassword)
-                break 
-            except sqlite3.OperationalError as e:
-                if 'database is locked' in str(e):
-                    if attempt < max_retries - 1:
-                        time.sleep(retry_delay)
-                        retry_delay *= 2
-                    else:
-                        print(f"Failed to log action after {max_retries} attempts due to a locked database.")
-                        raise
-                else:
-                    raise
-            finally:
-                try:
-                    connection.close()
-                except Exception as close_err:
-                    print(f"Error closing the database connection: {close_err}")
-
-    def PrintLogs():
-      Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
-      conn = sqlite3.connect(Members.SourceDB)
-      print (pd.read_sql_query("SELECT * FROM ActivityLog", conn))
-      conn.close()
-      Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().DeleteDecrypted()
 
 class Members:
     SourceDB = "DataBase.db"
-    EncryptedDB = "DataBase.db.enc"
+    #EncryptedDB = "DataBase.db.enc"
     BackupDB = "DataBase_Backup.db"
     HardCodePassword = "VeryGoodPassWord"
     def UpdateBackUp():
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
         EncryptBackup(Members.SourceDB, Members.HardCodePassword)
     
     def DeleteOldestBackups(directory, MaxBackups = 10):
@@ -212,18 +194,19 @@ class Members:
             if name == None:
                 print("No file found, try again")
 
+        # encrypted_file_path = "Backups/" + name
+        # EncryptNew().RestoreBackup(encrypted_file_path, Members.SourceDB)
         encrypted_file_path = "Backups/" + name
         Decrypt(encrypted_file_path, Members.HardCodePassword, Members.SourceDB)
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
         print("Backup restored")
 
     def PrintMembers():
-        Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
+        EncryptNew().DecryptAll("Members")
         conn = sqlite3.connect(Members.SourceDB)
         cur = conn.cursor()
         try:
-            print (pd.read_sql_query("SELECT Username, FirstName, LastName, Age, Gender, Weight, Address, City, Email, PhoneNumber, Type,RegistrationDate, MemberID FROM Members", conn))
+            print (pd.read_sql_query("SELECT Username, FirstName, LastName, Age, Gender, Weight, Address, City, Email, PhoneNumber, Type,RegistrationDate, MemberID FROM Decrypted", conn))
         except:
             print("No Data found")
         conn.close()
-        Encrypt(Members.SourceDB, Members.HardCodePassword)
+        EncryptNew().DeleteDecrypted()
