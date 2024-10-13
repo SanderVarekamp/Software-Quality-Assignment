@@ -1,127 +1,258 @@
-import os
+# Import necessary modules from pycryptodome
 import sqlite3
-import secrets
-import glob
-from datetime import date
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from cryptography.hazmat.primitives import padding
-from cryptography.hazmat.backends import default_backend
+import shutil
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from binascii import hexlify, unhexlify
 
-class DBEncryptor:
-    SALT_SIZE = 16
-    KEY_SIZE = 32
-    NONCE_SIZE = 12
-    BACKEND = default_backend()
+from Logs import Logs
 
-    def __init__(self, password: str):
-        self.password = password
 
-    def _generate_key(self, salt: bytes) -> bytes:
-        kdf = Scrypt(
-            salt=salt,
-            length=self.KEY_SIZE,
-            n=2**14,
-            r=8,
-            p=1,
-            backend=self.BACKEND
-        )
-        key = kdf.derive(self.password.encode())
-        return key
+class EncryptNew:
 
-    def encrypt_file(self, file_path: str, IsBackup = False) -> str:
-        with open(file_path, 'rb') as file:
-            data = file.read()
+    def __init__(self):
+        self.private_key = self._load_private_key()
+        self.public_key = self._load_public_key()
+        self.encrypted_data = []
 
-        salt = secrets.token_bytes(self.SALT_SIZE)
-        nonce = secrets.token_bytes(self.NONCE_SIZE)
-        key = self._generate_key(salt)
+    def _load_private_key(self):
+        with open("private_key.pem", "rb") as file:
+            private_key = RSA.import_key(file.read())
+        return private_key
+    
+    def _load_public_key(self):
+        with open("public_key.pem", "rb") as file:  
+            public_key = RSA.import_key(file.read())  
+        return public_key
+    
+    def encrypt_user(self, user):
+        connection = sqlite3.connect('DataBase.db')
+        cursor = connection.cursor()    
+        cursor.execute("""CREATE TABLE IF NOT EXISTS Members (
+                    Username TEXT,
+                    PasswordHash TEXT,
+                    FirstName TEXT, 
+                    LastName TEXT, 
+                    Age INTEGER, 
+                    Gender TEXT, 
+                    Weight INTEGER, 
+                    Address TEXT, 
+                    City TEXT, 
+                    Email TEXT, 
+                    PhoneNumber TEXT, 
+                    Type TEXT,
+                    RegistrationDate TEXT, 
+                    MemberID INTEGER
+                    )""")
+        connection.commit()
+        self.encrypted_data = user.Encrypt(self.public_key)
+        cursor.execute('INSERT INTO Members VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (self.encrypted_data[0], self.encrypted_data[1], self.encrypted_data[2], self.encrypted_data[3], self.encrypted_data[4], self.encrypted_data[5], self.encrypted_data[6], self.encrypted_data[7], self.encrypted_data[8], self.encrypted_data[9], self.encrypted_data[10], self.encrypted_data[11], self.encrypted_data[12], self.encrypted_data[13]))
+        connection.commit()  
+    
+    def decrypt_user(self, db_path, given_name):
+        from Account import Account
+        all_members = []
+        
+        # Use context manager to handle connection
+        with sqlite3.connect(db_path) as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM Members")
+            rows = cursor.fetchall()
 
-        padder = padding.PKCS7(algorithms.AES.block_size).padder()
-        padded_data = padder.update(data) + padder.finalize()
+        # Set up RSA decryption
+        cipher_rsa = PKCS1_OAEP.new(self.private_key)
 
-        cipher = Cipher(algorithms.AES(key), modes.GCM(nonce), backend=self.BACKEND)
-        encryptor = cipher.encryptor()
-        encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
+        # Loop through each row in the database result
+        for row in rows:
+            decrypted_data = []
 
-        encrypted_file_data = salt + nonce + encryptor.tag + encrypted_data
-        if IsBackup:
-            today = date.today()
-            formatted_date = today.strftime("%d%m%y")
-            count = 0
-            encrypted_file_path = "Backups/" + formatted_date + "." + str(count) + '.dbBackup.enc.zip'
-            files = glob.glob(os.path.join("Backups", '*'))
-            for file_path in files:
-                if os.path.isfile(file_path):
-                    if encrypted_file_path == "Backups/" + os.path.basename(file_path):
-                        count = count+1
-                        encrypted_file_path = "Backups/" + formatted_date + "." + str(count) + '.dbBackup.enc.zip'
-        else:
-            encrypted_file_path = file_path + '.enc'
+            # Loop through each field in the row
+            for data in row:
+                try:
+                    # Try to unhexlify and decrypt the data
+                    decrypted = cipher_rsa.decrypt(unhexlify(data))
+                    word = decrypted.decode("utf-8")
+                    decrypted_data.append(word)
+                except (ValueError, TypeError, Exception) as e:
+                    # Catch specific exceptions and log/print errors
+                    # Append the data as is if it's not encrypted or decryption fails
+                    decrypted_data.append(data)
+            # Create an Account object with decrypted data
+            account = Account(
+                decrypted_data[0],  # Username
+                decrypted_data[1],  # Password hash
+                decrypted_data[2],  # First name
+                decrypted_data[3],  # Last name
+                str(decrypted_data[4]),  # Age
+                decrypted_data[5],  # Gender
+                str(decrypted_data[6]),  # Weight
+                decrypted_data[7],  # Address
+                decrypted_data[8],  # City
+                decrypted_data[9],  # Email
+                decrypted_data[10],  # PhoneNumb
+                decrypted_data[11],  # Type
+                decrypted_data[12], # Registration date
+                decrypted_data[13]  # Member ID
+            )
 
-        with open(encrypted_file_path, 'wb') as encrypted_file:
-            encrypted_file.write(encrypted_file_data)
+            account.RegistrationDate = decrypted_data[12]  # Correct date if necessary
+            account.MemberID = str(decrypted_data[13])     # Correct ID if necessary
 
-        if not IsBackup:
-            open(file_path, 'wb').close()
+            # If a specific name is provided, return the account for that name
+            if decrypted_data[0] == given_name and given_name is not None:
+                return account
+            else:
+                all_members.append(account)
+        
+        # Return all members if no specific name was matched
+        return all_members
+        
+    def encrypt_log(self, log):
+        connection = sqlite3.connect('DataBase.db')
+        cursor = connection.cursor()
+        cursor.execute("""CREATE TABLE IF NOT EXISTS ActivityLog (
+                    Date TEXT, 
+                    Time TEXT, 
+                    Username TEXT, 
+                    Activity TEXT, 
+                    Information TEXT, 
+                    Suspicious TEXT 
+                    )""")
+        connection.commit()
+        self.encrypted_data = log.Encrypt(self.public_key)
+        cursor.execute('INSERT INTO ActivityLog VALUES (?, ?, ?, ?, ?, ?)', (self.encrypted_data[0], self.encrypted_data[1], self.encrypted_data[2], self.encrypted_data[3], self.encrypted_data[4], self.encrypted_data[5]))
+        connection.commit()
+        connection.close()
 
-        return encrypted_file_path
 
-    def decrypt_file(self, encrypted_file_path: str, output_file_path: str) -> None:
+    def decrypt_log(self, db_path) -> list:
+        connection = sqlite3.connect(db_path)
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM ActivityLog ORDER BY Date DESC, Time DESC LIMIT 10")
+        rows = cursor.fetchall()
+        
+        all_decrypted_logs = []  # This will store all the decrypted logs (each log being a list of fields)
+        cipher_rsa = PKCS1_OAEP.new(self.private_key)
+        
+        for row in rows:
+            decrypted_data = []
+            
+            for data in row:
+                try:
+                    # Decrypt each field, assuming the entire row is encrypted
+                    decrypted = cipher_rsa.decrypt(unhexlify(data))  # Unhexlify and decrypt each field
+                    word = decrypted.decode("utf-8")
+                    decrypted_data.append(word)  # Append decrypted word to the row
+                except Exception as e:
+                    # Handle any decryption failures gracefully
+                    print(f"Failed to decrypt data: {e}")
+                    decrypted_data.append(data)  # Optionally append the raw data if decryption fails
+            
+            all_decrypted_logs.append(decrypted_data)  # Append the decrypted row to all logs
+        
+        connection.close()
+        return all_decrypted_logs
+
+    
+    def SelectFromDatabase(self, accounts, condition, fetchAll, input=None):
         try:
-            with open(encrypted_file_path, 'rb') as encrypted_file:
-                encrypted_data = encrypted_file.read()
+            if input is None:
+                filtered_accounts = [account for account in accounts if condition(account)]
+            else:
+                filtered_accounts = [account for account in accounts if condition(account, input)]
 
-            salt = encrypted_data[:self.SALT_SIZE]
-            nonce = encrypted_data[self.SALT_SIZE:self.SALT_SIZE + self.NONCE_SIZE]
-            tag = encrypted_data[self.SALT_SIZE + self.NONCE_SIZE:self.SALT_SIZE + self.NONCE_SIZE + 16]
-            ciphertext = encrypted_data[self.SALT_SIZE + self.NONCE_SIZE + 16:]
-
-            key = self._generate_key(salt)
-
-            cipher = Cipher(algorithms.AES(key), modes.GCM(nonce, tag), backend=self.BACKEND)
-            decryptor = cipher.decryptor()
-            padded_data = decryptor.update(ciphertext) + decryptor.finalize()
-
-            unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
-            data = unpadder.update(padded_data) + unpadder.finalize()
-
-            with open(output_file_path, 'wb') as output_file:
-                output_file.write(data)
+            if fetchAll:
+                result = filtered_accounts
+            else:
+                result = filtered_accounts[0] if filtered_accounts else None
         except:
-            return
+            result = None
+        return result
+    
+    def DecryptAll(self, thing):
+        connection = sqlite3.connect('DataBase.db')
+        cursor = connection.cursor()  
+        system = EncryptNew()  
+        if thing == "Members":
+            items =  system.decrypt_user("DataBase.db", None)
+            cursor.execute("""CREATE TABLE IF NOT EXISTS Decrypted (
+            Username TEXT,
+            PasswordHash TEXT,
+            FirstName TEXT, 
+            LastName TEXT, 
+            Age INTEGER, 
+            Gender TEXT, 
+            Weight INTEGER, 
+            Address TEXT, 
+            City TEXT, 
+            Email TEXT, 
+            PhoneNumber TEXT, 
+            Type TEXT,
+            RegistrationDate TEXT, 
+            MemberID INTEGER
+            )""")
+            connection.commit()
+            if items is not None:
+                for user in items:
+                    cursor.execute('INSERT INTO Decrypted VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (user.Username, user.PasswordHash, user.FirstName, user.LastName, user.Age, user.Gender, user.Weight, user.Address, user.City, user.Email, user.PhoneNumb, user.Type, user.RegistrationDate, user.MemberID))
+        elif thing == "Logs":
+            items = self.decrypt_log("DataBase.db")
+            cursor.execute("""CREATE TABLE IF NOT EXISTS Decrypted (
+                    Date TEXT, 
+                    Time TEXT, 
+                    Username TEXT, 
+                    Activity TEXT, 
+                    Information TEXT, 
+                    Suspicious TEXT 
+                )""")
+            connection.commit()
+            for log in items:
+                cursor.execute('INSERT INTO Decrypted VALUES (?, ?, ?, ?, ?, ?)', (log.Date, log.Time, log.Username, log.Activity, log.Info, log.Suspicious))
+        else:
+            return None  
+        connection.commit()  
 
-#     def read_db(self, db_file_path: str) -> None:
-#         conn = sqlite3.connect(db_file_path)
-#         cursor = conn.cursor()
-#         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-#         tables = cursor.fetchall()
-#         for table_name in tables:
-#             table_name = table_name[0]
-#             print(f"Table: {table_name}")
-#             cursor.execute(f"PRAGMA table_info({table_name});")
-#             columns = cursor.fetchall()
-#             print("Columns:")
-#             for column in columns:
-#                 print(f" - {column[1]} ({column[2]})")
-#             cursor.execute(f"SELECT * FROM {table_name};")
-#             rows = cursor.fetchall()
-#             print("Rows:")
-#             for row in rows:
-#                 print(row)
-#         conn.close()
+    def ChangeTable(self, table):
+        connection = sqlite3.connect('DataBase.db')
+        cursor = connection.cursor()
+        
+        cursor.execute(f"DROP TABLE IF EXISTS {table}")
+        cursor.execute(f"ALTER TABLE Decrypted RENAME TO {table}")
+        
+        connection.commit()
+        connection.close()
 
-def Encrypt(FilePathDB, Password):
-    encryptor = DBEncryptor(Password)
-    encrypted_file_path = encryptor.encrypt_file(FilePathDB)
-    return encrypted_file_path
+    def DeleteDecrypted(self):
+        connection = sqlite3.connect('DataBase.db')
+        cursor = connection.cursor()
+        cursor.execute("DROP TABLE Decrypted")
+        connection.commit()
+        connection.close()
 
-def EncryptBackup(FilePathDB, Password):
-    encryptor = DBEncryptor(Password)
-    encrypted_file_path = encryptor.encrypt_file(FilePathDB, True)
-    return encrypted_file_path
-
-def Decrypt(EncryptedFilePath, PassWord, DecryptedFilePath):
-    encryptor = DBEncryptor(PassWord)
-    encryptor.decrypt_file(EncryptedFilePath, DecryptedFilePath)
-    return DecryptedFilePath
+    def Createbackup(self, source_db, destination_db):
+        """
+        Duplicates the entire database file.
+        
+        :param source_db: Path to the source database file.
+        :param destination_db: Path to the destination database file.
+        """
+        try:
+            shutil.copyfile(source_db, destination_db)
+            print(f"Database duplicated successfully from {source_db} to {destination_db}")
+        except Exception as e:
+            print(f"An error occurred while duplicating the database: {e}")
+        return destination_db
+    
+    def RestoreBackup(self, source_db, destination_db):
+        """
+        Restores the database file from a backup.
+        
+        :param source_db: Path to the source database file.
+        :param destination_db: Path to the destination database file.
+        """
+        try:
+            shutil.copyfile(source_db, destination_db)
+            print(f"Database restored successfully from {source_db} to {destination_db}")
+        except Exception as e:
+            print(f"An error occurred while restoring the database: {e}")
+        return destination_db

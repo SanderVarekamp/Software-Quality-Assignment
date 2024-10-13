@@ -137,7 +137,7 @@ class main:
         # connection.close()
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
         account = Account("super_admin", bcrypt.hashpw("Admin_123?".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "SuperAdmin", str(date.today().strftime("%d/%m/%Y")), 1)
-        EncryptNew().encrypt_member(account)
+        EncryptNew().encrypt_user(account)
 
     def hardcodeAdmin():
         # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
@@ -150,7 +150,7 @@ class main:
         # connection.close()
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
         account = Account("admin", bcrypt.hashpw("admin".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 3)
-        EncryptNew().encrypt_member(account)
+        EncryptNew().encrypt_user(account)
 
     def hardcodeConsultant():
         # Decrypt(Members.EncryptedDB, Members.HardCodePassword, Members.SourceDB)
@@ -163,7 +163,7 @@ class main:
         # connection.close()
         # Encrypt(Members.SourceDB, Members.HardCodePassword)
         account = Account("consultant", bcrypt.hashpw("consultant".encode("utf-8"),bcrypt.gensalt()), "admin", "admin", "100", "other", "100", "admin", "admin", "admin@hr.nl", "0107944000", "Admin", str(date.today().strftime("%d/%m/%Y")), 2)
-        EncryptNew().encrypt_member(account)   
+        EncryptNew().encrypt_user(account)   
 
 if __name__ == '__main__':
     main.start()

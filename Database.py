@@ -4,8 +4,8 @@ import pandas as pd
 import os
 import re
 import glob
+from EncryptFile import *
 from Encrypt import *
-from Encrypt2 import *
 from Logs import Logs
 
 class Database:
@@ -53,7 +53,7 @@ class Database:
         connection.close()
 
     def LogAction(username: str, activity: str, info: str, sus: bool):
-        from Encrypt2 import EncryptNew  # Lazy import
+        from Encrypt import EncryptNew  # Lazy import
         max_retries = 5
         retry_delay = 0.1
         timeout = 30
@@ -73,10 +73,25 @@ class Database:
                 else:
                     raise
 
+    
     def PrintLogs():
-        from Encrypt2 import EncryptNew  # Lazy import
-        logs = EncryptNew().decrypt_log("DataBase.db")
-        print(logs)
+        from Encrypt import EncryptNew  # Lazy import
+        logs = EncryptNew().decrypt_log("DataBase.db")  # Decrypt all logs from the database
+        if not logs:
+            print("No logs found.")
+            return
+
+        print("Activity Logs:")
+        
+        # Iterate over each log and ensure it's well-formed
+        for log in logs:
+            # Check that the log has at least 6 fields (Date, Time, Username, Activity, Information, Suspicious)
+            if len(log) >= 6:
+                print(f"Date: {log[0]} | Time: {log[1]} | Username: {log[2]} | Activity: {log[3]} | Information: {log[4]} | Suspicious: {log[5]}")
+            else:
+                print("Error: Log entry is incomplete or corrupted.", log)
+        
+                
 
     def SelectFromDatabase(query, fetchAll, input = None):
         EncryptNew().DecryptAll("Members")
