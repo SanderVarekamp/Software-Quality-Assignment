@@ -77,9 +77,14 @@ class main:
                 elif choice == "7":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Restoring backup.",False)
                     Members.RestoreBackup()
+                    if AccountManager.SearchAccountForce(LoggedInAccount.CurrentLoggedInAccount.Username) == None:
+                        print("Account not found, logging out")
+                        LoggedInAccount.LogOut() 
+                        main.menu()
                     if AccountManager.SearchAccountForce(LoggedInAccount.CurrentLoggedInAccount.Username).Username != LoggedInAccount.CurrentLoggedInAccount.Username:
                         print("Account not found, logging out")
                         LoggedInAccount.LogOut()
+                        main.menu()
                 elif choice == "8":
                     Database.LogAction(LoggedInAccount.CurrentLoggedInAccount.Username if LoggedInAccount.CurrentLoggedInAccount != None else None,"Selecting from menu options.", "Changing password",False)
                     AccountManager.ChangePasswordInput()
