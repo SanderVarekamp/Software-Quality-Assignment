@@ -87,7 +87,8 @@ class Account:
             if word == self.PasswordHash:
                 encrypted_data.append(word)
             else:
-                data_to_encrypt = word.encode('utf-8')  
+                if word != None:
+                    data_to_encrypt = word.encode('utf-8')  
                 cipher_rsa = PKCS1_OAEP.new(public_key)
                 encrypted = cipher_rsa.encrypt(data_to_encrypt)
                 encrypted_data.append(hexlify(encrypted))
