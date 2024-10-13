@@ -76,7 +76,8 @@ class Database:
     def PrintLogs():
         from Encrypt2 import EncryptNew  # Lazy import
         logs = EncryptNew().decrypt_log("DataBase.db")
-        print(logs)
+        for log in logs:
+            log.Print()
 
     def SelectFromDatabase(query, fetchAll, input = None):
         EncryptNew().DecryptAll("Members")

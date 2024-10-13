@@ -131,6 +131,7 @@ class EncryptNew:
         cursor.execute("SELECT * FROM ActivityLog")
         rows = cursor.fetchall()
         
+        decrypted_logs = []
         cipher_rsa = PKCS1_OAEP.new(self.private_key)
         for row in rows:
             decrypted_data = []
@@ -141,8 +142,10 @@ class EncryptNew:
                     decrypted_data.append(word)
                 except:
                     decrypted_data.append(data)
+            log = Logs(decrypted_data[2], decrypted_data[3], decrypted_data[4], decrypted_data[5], decrypted_data[0], decrypted_data[1], )
+            decrypted_logs.append(log)
         connection.close()
-        return decrypted_data
+        return decrypted_logs
     
     def SelectFromDatabase(self, accounts, condition, fetchAll, input=None):
         try:
